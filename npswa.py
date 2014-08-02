@@ -24,6 +24,7 @@ def split_time_name(openfilestream):
             name_end = rest.find(':')
             if name_end >= 0:
                 name = rest[:name_end].strip()
+                name = ' '.join(name.split()) # Get rid of double spaces in names
                 msg = rest[name_end+1:].strip()
                 yield datestr, datetime_str, name, msg
 
