@@ -6,15 +6,18 @@ from collections import OrderedDict
 def split_time_name(openfilestream):
     date_fmt = 'dd/MM/yyyy'
     datetime_fmt = date_fmt + ' hh:mm:ss aa'
-    datematchprog = re.compile('/2014 ([1-9]):')
-    replacement = '/2014 0\\1:'
+    date_repl_prog = re.compile('^([1-9])/([0-9][0-9])/([1-9][0-9][0-9][0-9])')
+    date_repl = '0\\1/\\2/\\3'
+    time_repl_prog = re.compile('^([0-9][0-9])/([0-9][0-9])/([1-9][0-9][0-9][0-9]) ([1-9]):')
+    time_repl = '\\1/\\2/\\3 0\\4:'
     for line in openfilestream:
         line = line.strip()
         if line:
-            line = datematchprog.sub(replacement , line)
-            #print line
+            line = date_repl_prog.sub(date_repl, line)
+            line = time_repl_prog.sub(time_repl, line)
             if len(line) <= len(datetime_fmt) or ':' != line[len(datetime_fmt)]:
                 continue                
+            #print line
             datetime_str = line[:len(datetime_fmt)].strip()
             datestr = datetime_str[:len('dd/MM/yyyy')].strip()
             rest = line[len(datetime_fmt)+1:].strip()
