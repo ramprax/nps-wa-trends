@@ -76,12 +76,14 @@ def gen_summary_charts(upfile, upfilename, datestr):
     grp_trend = StringIO.StringIO()
     plottry.line_plot_dates_messages(dates_arr, msg_totals, 'Message count', 'Messages by date till '+datestr, grp_trend, 'png')
     grp_trend.seek(0)
+
+    datestrhyphen = datestr.replace('/', '-')
     
     mf = StringIO.StringIO()
     with zipfile.ZipFile(mf, mode='w', compression=zipfile.ZIP_DEFLATED) as zf:
-        zf.writestr('summary.csv', csv_content)
-        zf.writestr('day_msgs_per_person.png', today_plot.getvalue())
-        zf.writestr('group_trend.png', grp_trend.getvalue())
+        zf.writestr('summary_{0}.csv'.format(datestrhyphen), csv_content)
+        zf.writestr('day_msgs_per_person_{0}.png'.format(datestrhyphen), today_plot.getvalue())
+        zf.writestr('group_trend_{0}.png'.format(datestrhyphen), grp_trend.getvalue())
 
     mf.seek(0)
     resp = make_response((mf.getvalue(), None, headers))
