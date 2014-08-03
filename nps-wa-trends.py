@@ -66,7 +66,8 @@ def generate_summary_resp(upfile, upfilename):
     return make_response((csv_content, None, headers))
 
 def gen_summary_charts(upfile, upfilename, datestr):
-    headers = {"Content-Disposition": "attachment; filename=%s" % ('summary_charts.zip')}
+    datestrhyphen = datestr.replace('/', '-')
+    headers = {"Content-Disposition": "attachment; filename=%s" % ('summary_charts_{0}.zip'.format(datestrhyphen))}
     csv_content, dates_arr, msg_totals, names_arr, day_msgs_by_name = get_summary_data(upfile.stream, datestr)
     
     today_plot = StringIO.StringIO()
@@ -77,8 +78,6 @@ def gen_summary_charts(upfile, upfilename, datestr):
     plottry.line_plot_dates_messages(dates_arr, msg_totals, 'Message count', 'Messages by date till '+datestr, grp_trend, 'png')
     grp_trend.seek(0)
 
-    datestrhyphen = datestr.replace('/', '-')
-    
     mf = StringIO.StringIO()
     with zipfile.ZipFile(mf, mode='w', compression=zipfile.ZIP_DEFLATED) as zf:
         zf.writestr('summary_{0}.csv'.format(datestrhyphen), csv_content)
