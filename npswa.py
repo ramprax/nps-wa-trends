@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import datetime
 import re
 from collections import OrderedDict
 
@@ -12,13 +13,20 @@ def split_time_name(openfilestream):
     time_repl = '\\1/\\2/\\3 0\\4:'
     for line in openfilestream:
         line = line.strip()
+        #print len(line)
+        #print '''### Raw line = '%s' ''' % line
         if line:
             line = date_repl_prog.sub(date_repl, line)
             line = time_repl_prog.sub(time_repl, line)
+            #print '#### date subst line = ', line
             if len(line) <= len(datetime_fmt) or ':' != line[len(datetime_fmt)]:
-                continue                
-            #print line
+                continue               
+            print line
             datetime_str = line[:len(datetime_fmt)].strip()
+            try:
+                dtdt = datetime.datetime.strptime(datetime_str, '%d/%m/%Y %I:%M:%S %p')
+            except:
+                continue
             datestr = datetime_str[:len('dd/MM/yyyy')].strip()
             rest = line[len(datetime_fmt)+1:].strip()
             name_end = rest.find(':')

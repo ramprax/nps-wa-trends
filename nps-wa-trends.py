@@ -1,5 +1,6 @@
-
+import sys
 import os
+import datetime
 import zipfile
 import StringIO
 from flask import Flask, request, make_response
@@ -33,28 +34,46 @@ def upload_file():
       <p><input type=file name=upfile>
          <input type=submit value=Upload>
     </form>
+    <hr>
     '''
+
+DEFAULT_RESPONSE = '''
+<!doctype html>
+<title>NPS chat summary</title>
+<h1>Upload chat txt file</h1>
+<form action="/" method=post enctype=multipart/form-data>
+  Summarise upto this date(dd/mm/yyyy): <input type=text name=datestr value="DD/MM/YYYY">
+  <br><input type=file name=upfile><input type=submit value=Upload >
+</form>
+<hr>
+{0}
+'''
 
 @app.route('/', methods=['GET', 'POST'])
 def new_summary():
     if request.method == 'POST':
         upfile = request.files['upfile']
         datestr = request.form['datestr']
-        if not datestr:
-            raise 'Date mandatory'
-        upfilename = upfile.filename
-        if upfile and allowed_file(upfile.filename):
-            return gen_summary_charts(upfile, upfilename, datestr)
-    return '''
-    <!doctype html>
-    <title>NPS chat summary</title>
-    <h1>Upload chat txt file</h1>
-    <form action="/" method=post enctype=multipart/form-data>
-      Summarise upto this date(dd/mm/yyyy): <input type=text name=datestr value="DD/MM/YYYY">
-      <br><input type=file name=upfile><input type=submit value=Upload >
-    </form>
-    '''
+        return process_req(upfile, datestr)
+    return DEFAULT_RESPONSE.format(' ')
 
+
+def process_req(upfile, datestr):
+    ex_info = None
+    try:
+        dtdt = datetime.datetime.strptime(datestr, '%d/%m/%Y')
+    except:
+        ex_info = 'Date entered is invalid or not in DD/MM/YYYY fromat'
+
+    if ex_info:
+        return DEFAULT_RESPONSE.format(ex_info)    
+    upfilename = upfile.filename
+    if not upfile:
+        return DEFAULT_RESPONSE.format('No file given for processing')
+    if not allowed_file(upfile.filename):
+        return DEFAULT_RESPONSE.format('Unknown file type. Can process .txt or .text files only.')
+    
+    return gen_summary_charts(upfile, upfilename, datestr)
 
 def generate_summary_resp(upfile, upfilename):
     headers = {"Content-Disposition": "attachment; filename=%s" % ('summary.csv')}
@@ -94,11 +113,13 @@ def gen_summary_charts(upfile, upfilename, datestr):
 
 
 def get_summary_data(instream, datestr):
+    print '#### datestr = ', datestr
     done = False
     csv_content_arr = []
     datestr_arr = []
     date_msg_totals = []
     for line in count_by_date_name(split_time_name(instream)):
+        print '#### line = ', line
         if not line:
             continue
         csv_content_arr.append(line)
@@ -117,9 +138,9 @@ def get_summary_data(instream, datestr):
         if done:
             break
     csv_content = '\n'.join(csv_content_arr)
-    #print type(csv_content), len(csv_content)
-    #print datestr_arr
-    #print date_msg_totals
+    print type(csv_content), len(csv_content)
+    print datestr_arr
+    print date_msg_totals
     today_msgs_by_name = [ int(x) for x in today_msgs_by_name.split(',')[1:] ]
     names_line = names_line.split(',')[1:]
     return csv_content, datestr_arr, date_msg_totals, names_line, today_msgs_by_name
