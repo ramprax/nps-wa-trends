@@ -21,7 +21,7 @@ def split_time_name(openfilestream):
             #print '#### date subst line = ', line
             if len(line) <= len(datetime_fmt) or ':' != line[len(datetime_fmt)]:
                 continue               
-            print line
+            #print line
             datetime_str = line[:len(datetime_fmt)].strip()
             try:
                 dtdt = datetime.datetime.strptime(datetime_str, '%d/%m/%Y %I:%M:%S %p')

@@ -81,7 +81,7 @@ def generate_summary_resp(upfile, upfilename):
     for line in count_by_date_name(split_time_name(upfile.stream)):
         csv_content.append(line)
     csv_content = '\n'.join(csv_content)
-    print type(csv_content), len(csv_content)
+    #print type(csv_content), len(csv_content)
     return make_response((csv_content, None, headers))
 
 def gen_summary_charts(upfile, upfilename, datestr):
@@ -113,13 +113,13 @@ def gen_summary_charts(upfile, upfilename, datestr):
 
 
 def get_summary_data(instream, datestr):
-    print '#### datestr = ', datestr
+    #print '#### datestr = ', datestr
     done = False
     csv_content_arr = []
     datestr_arr = []
     date_msg_totals = []
     for line in count_by_date_name(split_time_name(instream)):
-        print '#### line = ', line
+        #print '#### line = ', line
         if not line:
             continue
         csv_content_arr.append(line)
@@ -138,9 +138,9 @@ def get_summary_data(instream, datestr):
         if done:
             break
     csv_content = '\n'.join(csv_content_arr)
-    print type(csv_content), len(csv_content)
-    print datestr_arr
-    print date_msg_totals
+    #print type(csv_content), len(csv_content)
+    #print datestr_arr
+    #print date_msg_totals
     today_msgs_by_name = [ int(x) for x in today_msgs_by_name.split(',')[1:] ]
     names_line = names_line.split(',')[1:]
     return csv_content, datestr_arr, date_msg_totals, names_line, today_msgs_by_name
