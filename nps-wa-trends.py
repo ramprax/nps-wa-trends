@@ -5,6 +5,7 @@ import zipfile
 import StringIO
 from flask import Flask, request, make_response
 from npswa import count_by_date_name, split_time_name
+from wc_gen import make_word_cloud_image
 import plottry
 
 ALLOWED_EXTENSIONS = set(['txt', 'text'])
@@ -87,7 +88,14 @@ def generate_summary_resp(upfile, upfilename):
 def gen_summary_charts(upfile, upfilename, datestr):
     datestrhyphen = datestr.replace('/', '-')
     headers = {"Content-Disposition": "attachment; filename=%s" % ('summary_charts_{0}.zip'.format(datestrhyphen))}
-    csv_content, dates_arr, msg_totals, names_arr, day_msgs_by_name = get_summary_data(upfile.stream, datestr)
+    full_text = upfile.stream.read().lower()
+    csv_content, dates_arr, msg_totals, names_arr, day_msgs_by_name = get_summary_data(full_text, datestr)
+    
+    tag_text = ' '
+    for i in xrange(len(names_arr)):
+        freq = day_msgs_by_name[i]
+        name = names_arr[i]
+        tag_text = ' '.join((tag_text, ' '.join([name] * freq)))
     
     today_plot = StringIO.StringIO()
     plottry.bar_plot_names_messages(names_arr, day_msgs_by_name, 'Message count', 'Messages by person on '+datestr, today_plot, 'png')
@@ -96,17 +104,29 @@ def gen_summary_charts(upfile, upfilename, datestr):
     grp_trend = StringIO.StringIO()
     plottry.line_plot_dates_messages(dates_arr, msg_totals, 'Message count', 'Messages by date till '+datestr, grp_trend, 'png')
     grp_trend.seek(0)
+    
+    tag_cloud_image = StringIO.StringIO()
+    make_word_cloud_image(tag_text, tag_cloud_image)
+    tag_cloud_image.seek(0)
+    
+    full_tag_cloud_image = StringIO.StringIO()
+    make_word_cloud_image(full_text, full_tag_cloud_image)
+    full_tag_cloud_image.seek(0)
 
     mf = StringIO.StringIO()
     with zipfile.ZipFile(mf, mode='w', compression=zipfile.ZIP_DEFLATED) as zf:
         zf.writestr('summary_{0}.csv'.format(datestrhyphen), csv_content)
         zf.writestr('day_msgs_per_person_{0}.png'.format(datestrhyphen), today_plot.getvalue())
         zf.writestr('group_trend_{0}.png'.format(datestrhyphen), grp_trend.getvalue())
+        zf.writestr('name_cloud_{0}.png'.format(datestrhyphen), tag_cloud_image.getvalue())
+        zf.writestr('full_text_word_cloud_{0}.png'.format(datestrhyphen), full_tag_cloud_image.getvalue())
 
-    mf.seek(0)
-    resp = make_response((mf.getvalue(), None, headers))
     today_plot.close()
     grp_trend.close()
+    tag_cloud_image.close()
+    full_tag_cloud_image.close()
+    mf.seek(0)
+    resp = make_response((mf.getvalue(), None, headers))
     mf.close()
 
     return resp

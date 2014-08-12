@@ -11,7 +11,7 @@ def split_time_name(openfilestream):
     date_repl = '0\\1/\\2/\\3'
     time_repl_prog = re.compile('^([0-9][0-9])/([0-9][0-9])/([1-9][0-9][0-9][0-9]) ([1-9]):')
     time_repl = '\\1/\\2/\\3 0\\4:'
-    for line in openfilestream:
+    for line in openfilestream.split('\n'):
         line = line.strip()
         #print len(line)
         #print '''### Raw line = '%s' ''' % line
