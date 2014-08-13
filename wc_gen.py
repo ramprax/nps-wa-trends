@@ -18,9 +18,9 @@ def mydraw(elements, filedesc, format='PNG', font_path=None, width=400, height=2
         draw.text(pos, word, fill=color)
     img.save(filedesc, format=format)
 
-def make_word_cloud_image(text, output, format='PNG'):
+def make_word_cloud_image(text, output, format='PNG', font_file_name = 'Ubuntu-R.ttf'):
     d = path.dirname(__file__)
-    ub_font_path = path.join(d, 'Ubuntu-R.ttf')
+    ub_font_path = path.join(d, font_file_name)#'TSCu_Comic.ttf')#'Ubuntu-R.ttf')
 
     # Separate into a list of (word, frequency).
     words = process_text(text)
