@@ -4,14 +4,32 @@ import datetime
 import re
 from collections import OrderedDict
 
-def split_time_name(openfilestream):
-    date_fmt = 'dd/MM/yyyy'
-    datetime_fmt = date_fmt + ' hh:mm:ss aa'
+DATEFMT_MAP = {
+    'DD/MM/YYYY':'%d/%m/%Y',
+    'MM/DD/YYYY':'%m/%d/%Y'
+}
+
+TIMEFMT_MAP = {
+    'hh:mm:ss aa':'%I:%M:%S %p',
+    'HH:mm:ss':'%H:%M:%S',
+    'HH:mm':'%H:%M'
+}
+
+def split_time_name(openfilestream, datefmt_str, timefmt_str):
+    date_fmt = datefmt_str
+    datetime_fmt = datefmt_str + ' ' + timefmt_str
+
+    cdate_fmt = DATEFMT_MAP[date_fmt]
+    cdatetime_fmt = cdate_fmt + ' ' + TIMEFMT_MAP[timefmt_str]
+
     date_repl_prog = re.compile('^([1-9])/([0-9][0-9])/([1-9][0-9][0-9][0-9])')
     date_repl = '0\\1/\\2/\\3'
     time_repl_prog = re.compile('^([0-9][0-9])/([0-9][0-9])/([1-9][0-9][0-9][0-9]) ([1-9]):')
     time_repl = '\\1/\\2/\\3 0\\4:'
+    lineno = 0
     for line in openfilestream.split('\n'):
+        lineno = lineno + 1
+        print 'Line # ', lineno
         line = line.strip()
         #print len(line)
         #print '''### Raw line = '%s' ''' % line
@@ -28,13 +46,13 @@ def split_time_name(openfilestream):
                 #print line
                 datetime_str = line[:len(datetime_fmt)].strip()
                 try:
-                    dtdt = datetime.datetime.strptime(datetime_str, '%d/%m/%Y %I:%M:%S %p')
+                    dtdt = datetime.datetime.strptime(datetime_str, cdatetime_fmt)
                     valid_date_time = True
                 except:
                     valid_date_time = False
 
                 if valid_date_time:
-                    datestr = datetime_str[:len('dd/MM/yyyy')].strip()
+                    datestr = datetime_str[:len(date_fmt)].strip()
                     if len(line) > len(datetime_fmt):
                         rest = line[len(datetime_fmt)+1:].strip()
                     else:
@@ -112,7 +130,7 @@ def count_by_date_name(iterable, end_date):
     
     print '##### Finished'
 
-def get_summary_data(instream, datestr):
+def get_summary_data(instream, datestr, datefmt_str, timefmt_str):
     summary_data = {}
     #print '#### datestr = ', datestr
     totalsLineReached = False
@@ -123,7 +141,14 @@ def get_summary_data(instream, datestr):
     today_msgs_by_name = ''
     all_time_msgs_by_name = ''
     
-    stat_iter = count_by_date_name(split_time_name(instream), datestr)
+    stat_iter = count_by_date_name(
+        split_time_name(
+            instream,
+            datefmt_str,
+            timefmt_str
+        ),
+        datestr
+    )
     
     for line in stat_iter:
         #print '#### line = ', line

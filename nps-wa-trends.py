@@ -4,7 +4,7 @@ import datetime
 import zipfile
 import StringIO
 from flask import Flask, request, make_response
-from npswa import get_summary_data
+from npswa import get_summary_data, DATEFMT_MAP
 from wc_gen import make_word_cloud_image
 import plottry
 
@@ -41,13 +41,24 @@ def upload_file():
 DEFAULT_RESPONSE = '''
 <!doctype html>
 <title>NPS chat summary</title>
+<div id="main_page" width=75% align=center>
 <h1>Upload chat txt file</h1>
 <form action="/" method=post enctype=multipart/form-data>
-  Summarise upto this date(dd/mm/yyyy): <input type=text name=datestr value="DD/MM/YYYY">
+  Select date format used in the file:<br>
+  <input name="dateformat" type="radio" value="DD/MM/YYYY" checked="checked">DD/MM/YYYY<br>
+  <input name="dateformat" type="radio" value="MM/DD/YYYY">MM/DD/YYYY<br>
+  <br>
+  Select time format used in the file:<br>
+  <input name="timeformat" type="radio" value="hh:mm:ss aa" checked="checked">8:47:15 am<br>
+  <input name="timeformat" type="radio" value="HH:mm:ss">20:47:15   <br>
+  <input name="timeformat" type="radio" value="HH:mm">20:47      <br><br>
+  Summarise upto this date(in the above date format):<br>
+  <input type=text name=datestr value="">
   <br><input type=file name=upfile><input type=submit value=Upload >
 </form>
 <hr>
 {0}
+</div>
 '''
 
 @app.route('/', methods=['GET', 'POST'])
@@ -55,26 +66,29 @@ def new_summary():
     if request.method == 'POST':
         upfile = request.files['upfile']
         datestr = request.form['datestr']
-        return process_req(upfile, datestr)
+        datefmt_str = request.form['dateformat']
+        timefmt_str = request.form['timeformat']
+        return process_req(upfile, datestr, datefmt_str, timefmt_str)
     return DEFAULT_RESPONSE.format(' ')
 
 
-def process_req(upfile, datestr):
+def process_req(upfile, datestr, datefmt_str, timefmt_str):
     ex_info = None
     try:
-        dtdt = datetime.datetime.strptime(datestr, '%d/%m/%Y')
+        dtdt = datetime.datetime.strptime(datestr, DATEFMT_MAP[datefmt_str])
     except:
-        ex_info = 'Date entered is invalid or not in DD/MM/YYYY fromat'
+        ex_info = 'Date entered is invalid or not in correct fromat'
 
     if ex_info:
         return DEFAULT_RESPONSE.format(ex_info)    
-    upfilename = upfile.filename
     if not upfile:
         return DEFAULT_RESPONSE.format('No file given for processing')
     if not allowed_file(upfile.filename):
         return DEFAULT_RESPONSE.format('Unknown file type. Can process .txt or .text files only.')
+
+    upfilename = upfile.filename
     
-    return gen_summary_charts(upfile, upfilename, datestr)
+    return gen_summary_charts(upfile, upfilename, datestr, datefmt_str, timefmt_str)
 
 def generate_summary_resp(upfile, upfilename):
     headers = {"Content-Disposition": "attachment; filename=%s" % ('summary.csv')}
@@ -85,13 +99,13 @@ def generate_summary_resp(upfile, upfilename):
     #print type(csv_content), len(csv_content)
     return make_response((csv_content, None, headers))
 
-def gen_summary_charts(upfile, upfilename, datestr):
+def gen_summary_charts(upfile, upfilename, datestr, datefmt_str, timefmt_str):
     datestrhyphen = datestr.replace('/', '-')
     headers = {"Content-Disposition": "attachment; filename=%s" % ('summary_charts_{0}.zip'.format(datestrhyphen))}
     full_text = upfile.stream.read() #.lower()
     
     
-    summary = get_summary_data(full_text, datestr)
+    summary = get_summary_data(full_text, datestr, datefmt_str, timefmt_str)
     csv_content = summary['CSV']
     dates_arr = summary['DATES']
     msg_totals = summary['TOTAL_MSGS_BY_DATE']
@@ -101,10 +115,10 @@ def gen_summary_charts(upfile, upfilename, datestr):
     today_words = summary['TODAY_WORDS']
     all_time_words = summary['ALL_TIME_WORDS']
     
+    print 'Day msgs: ', len(day_msgs_by_name), day_msgs_by_name
+    print 'Names: ', len(names_arr), names_arr
     if not day_msgs_by_name or len(day_msgs_by_name) != len(names_arr):
         return DEFAULT_RESPONSE.format('Input file does not contain any entries for '+datestr+' or input file incomplete/corrupted. Please check and re-upload.')
-    
-        
     
     mf = StringIO.StringIO()
     with zipfile.ZipFile(mf, mode='w', compression=zipfile.ZIP_DEFLATED) as zf:
