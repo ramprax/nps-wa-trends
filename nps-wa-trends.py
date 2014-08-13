@@ -89,7 +89,11 @@ def gen_summary_charts(upfile, upfilename, datestr):
     datestrhyphen = datestr.replace('/', '-')
     headers = {"Content-Disposition": "attachment; filename=%s" % ('summary_charts_{0}.zip'.format(datestrhyphen))}
     full_text = upfile.stream.read().lower()
+    
     csv_content, dates_arr, msg_totals, names_arr, day_msgs_by_name = get_summary_data(full_text, datestr)
+    
+    if not day_msgs_by_name or len(day_msgs_by_name) != len(names_arr):
+        return DEFAULT_RESPONSE.format('Input file does not contain any entries for '+datestr+' or input file incomplete/corrupted. Please check and re-upload.')
     
     tag_text = ' '
     for i in xrange(len(names_arr)):
@@ -138,6 +142,7 @@ def get_summary_data(instream, datestr):
     csv_content_arr = []
     datestr_arr = []
     date_msg_totals = []
+    today_msgs_by_name = ''
     for line in count_by_date_name(split_time_name(instream)):
         #print '#### line = ', line
         if not line:
@@ -161,7 +166,7 @@ def get_summary_data(instream, datestr):
     #print type(csv_content), len(csv_content)
     #print datestr_arr
     #print date_msg_totals
-    today_msgs_by_name = [ int(x) for x in today_msgs_by_name.split(',')[1:] ]
+    today_msgs_by_name = [ (int(x) if x else 0) for x in today_msgs_by_name.split(',')[1:] ]
     names_line = names_line.split(',')[1:]
     return csv_content, datestr_arr, date_msg_totals, names_line, today_msgs_by_name
     
