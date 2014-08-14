@@ -113,7 +113,7 @@ def gen_summary_charts(upfile, upfilename, datestr, datefmt_str, timefmt_str):
     day_msgs_by_name = summary['TODAY_MSGS_BY_NAME']
     all_time_msgs_by_name = summary['ALL_TIME_MSGS_BY_NAME']
     today_words = summary['TODAY_WORDS']
-    all_time_words = summary['ALL_TIME_WORDS']
+    #all_time_words = summary['ALL_TIME_WORDS']
     
     print 'Day msgs: ', len(day_msgs_by_name), day_msgs_by_name
     print 'Names: ', len(names_arr), names_arr
@@ -140,11 +140,11 @@ def gen_summary_charts(upfile, upfilename, datestr, datefmt_str, timefmt_str):
         today_names = construct_text(names_arr, day_msgs_by_name)
         zf.writestr('today_name_cloud_{0}.png'.format(datestrhyphen), get_cloud_image_bytes(today_names))
         
-        all_time_names = construct_text(names_arr, all_time_msgs_by_name)
-        zf.writestr('all_time_name_cloud_{0}.png'.format(datestrhyphen), get_cloud_image_bytes(all_time_names))
+        #all_time_names = construct_text(names_arr, all_time_msgs_by_name)
+        #zf.writestr('all_time_name_cloud_{0}.png'.format(datestrhyphen), get_cloud_image_bytes(all_time_names))
 
         zf.writestr('today_word_cloud_{0}.png'.format(datestrhyphen), get_cloud_image_bytes(today_words, font_file_name='Symbola.ttf'))
-        zf.writestr('all_time_word_cloud_{0}.png'.format(datestrhyphen), get_cloud_image_bytes(all_time_words, font_file_name='Symbola.ttf'))
+        #zf.writestr('all_time_word_cloud_{0}.png'.format(datestrhyphen), get_cloud_image_bytes(all_time_words, font_file_name='Symbola.ttf'))
 
     mf.seek(0)
     resp = make_response((mf.getvalue(), None, headers))

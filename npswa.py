@@ -64,7 +64,8 @@ def split_time_name(openfilestream, datefmt_str, timefmt_str):
                         name = rest[:name_end].strip()
                         name = ' '.join(name.split()) # Get rid of double spaces in names
                         msg = ''+rest[name_end+1:].strip() # Everything after name is msg
-
+            if '<media omitted>' == msg:
+                msg = 'pic'
             yield datestr, datetime_str, (name.lower() if name else name), msg.lower()
 
 def count_by_date_name(iterable, end_date):
@@ -88,7 +89,6 @@ def count_by_date_name(iterable, end_date):
             break
         else:
             all_time_text = ' '.join((all_time_text, msg))
-      
 
         if not name:
             continue
