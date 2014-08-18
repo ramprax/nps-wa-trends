@@ -198,7 +198,7 @@ ERROR_MSG_DIV = '''
 FILETYPE_PLAIN_TEXT = "plain_text"
 FILETYPE_WA_CHAT_TEXT = "wa_chat_text"
 
-OUTPUT_NEED_GRAPHS = "need_csv"
+OUTPUT_NEED_CSV = "need_csv"
 OUTPUT_NEED_GRAPHS = "need_graphs"
 OUTPUT_NEED_WORD_CLOUDS = "need_word_clouds"
 
@@ -216,15 +216,15 @@ def new_summary():
     if request.method == 'POST':
         upfile = request.files['upfile']
         filetype = request.form['filetype']
-        print filetype
+        #print filetype
         datestr = request.form.get('datestr')
-        print datestr
+        #print datestr
         datefmt_str = request.form.get('dateformat')
-        print datefmt_str
+        #print datefmt_str
         timefmt_str = request.form.get('timeformat')
-        print timefmt_str
+        #print timefmt_str
         required_outputs = request.form.getlist("wa_output_config")
-        print required_outputs
+        #print required_outputs
         return process_req(upfile, filetype, datestr, datefmt_str, timefmt_str, required_outputs)
     return get_main_page('')
 
@@ -296,15 +296,16 @@ def gen_summary_charts(upfilestream, upfilename, datestr, datefmt_str, timefmt_s
     today_words = summary['TODAY_WORDS']
     #all_time_words = summary['ALL_TIME_WORDS']
     
-    print 'Day msgs: ', len(day_msgs_by_name), day_msgs_by_name
-    print 'Names: ', len(names_arr), names_arr
+    #print 'Day msgs: ', len(day_msgs_by_name), day_msgs_by_name
+    #print 'Names: ', len(names_arr), names_arr
     if not day_msgs_by_name or len(day_msgs_by_name) != len(names_arr):
         return get_main_page('Input file does not contain any entries for '+datestr+' or input file incomplete/corrupted. Please check and re-upload.')
     
     mf = StringIO.StringIO()
     with zipfile.ZipFile(mf, mode='w', compression=zipfile.ZIP_DEFLATED) as zf:
 
-        zf.writestr('summary_{0}.csv'.format(datestrhyphen), csv_content)
+        if OUTPUT_NEED_CSV in required_outputs:
+            zf.writestr('summary_{0}.csv'.format(datestrhyphen), csv_content)
 
         if OUTPUT_NEED_GRAPHS in required_outputs:
             today_plot = StringIO.StringIO()

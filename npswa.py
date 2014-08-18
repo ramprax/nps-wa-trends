@@ -29,7 +29,7 @@ def split_time_name(openfilestream, datefmt_str, timefmt_str):
     lineno = 0
     for line in openfilestream.split('\n'):
         lineno = lineno + 1
-        print 'Line # ', lineno
+        #print 'Line # ', lineno
         line = line.strip()
         #print len(line)
         #print '''### Raw line = '%s' ''' % line
@@ -110,7 +110,7 @@ def count_by_date_name(iterable, end_date):
     name_list.sort()
     yield ','.join(('Date', ','.join(name_list)))
     
-    print 'Date keys: ', date_name_count.keys()
+    #print 'Date keys: ', date_name_count.keys()
     
     tot_count_by_name = [0] * len(name_list)
     for datestr in date_name_count:
@@ -128,7 +128,7 @@ def count_by_date_name(iterable, end_date):
     
     yield (today_text, all_time_text)
     
-    print '##### Finished'
+    #print '##### Finished'
 
 def get_summary_data(instream, datestr, datefmt_str, timefmt_str):
     summary_data = {}
@@ -194,8 +194,8 @@ def get_summary_data(instream, datestr, datefmt_str, timefmt_str):
     summary_data['ALL_TIME_MSGS_BY_NAME'] = all_time_msgs_by_name
     
     today_words, all_time_words = next(stat_iter)
-    print 'today len', len(today_words)
-    print 'alltime len', len(all_time_words)
+    #print 'today len', len(today_words)
+    #print 'alltime len', len(all_time_words)
     summary_data['TODAY_WORDS'] = today_words
     summary_data['ALL_TIME_WORDS'] = all_time_words
     
@@ -214,5 +214,5 @@ if __name__ == '__main__':
 
     with open(filename) as fd:
         summary = get_summary_data(fd.read(), enddatestr)
-        #print 'summary: ', summary
+        print 'summary: ', summary
 
