@@ -42,8 +42,70 @@ MAIN_PAGE_HEADER = '''
 <!doctype html>
 <html>
 <head>
+<style>
+input[disabled]{
+  color: #666;     
+}
+</style>
 <script type="text/javascript">
 
+function getOutputOptionDefaults() {
+    var ooDefaults = new Object();
+
+    ooDefaults["inp_woc_graf"] = true;
+    ooDefaults["inp_woc_graf_grp_msgs_by_date"] = true;
+    ooDefaults["inp_woc_graf_day_msgs_by_name"] = true;
+    ooDefaults["inp_woc_graf_all_msgs_by_name"] = false;
+
+    ooDefaults["inp_woc_wcloud"] = true;
+    ooDefaults["inp_woc_wcloud_all_names"] = false;
+    ooDefaults["inp_woc_wcloud_day_names"] = true;
+    ooDefaults["inp_woc_wcloud_all_msgs"] = false;
+    ooDefaults["inp_woc_wcloud_day_msgs"] = true;
+
+    ooDefaults["inp_woc_csv"] = false;
+
+    return ooDefaults;
+}
+function getOutputOptions() {
+    var ooo = new Object();
+    ooo["inp_woc_csv"] = [];
+    ooo["inp_woc_graf"] = [
+        "inp_woc_graf_grp_msgs_by_date",
+        "inp_woc_graf_day_msgs_by_date",
+        "inp_woc_graf_all_msgs_by_date"
+    ];
+    ooo["inp_woc_wcloud"] = [
+        "inp_woc_wcloud_all_names",
+        "inp_woc_wcloud_day_names",
+        "inp_woc_wcloud_all_msgs",
+        "inp_woc_wcloud_day_msgs"
+    ];
+    return ooo;
+}
+
+function getGraphOptionInputNames() {
+    var a = [
+        "inp_woc_graf_grp_msgs_by_date",
+        "inp_woc_graf_day_msgs_by_name",
+        "inp_woc_graf_all_msgs_by_name"
+    ];
+    return a;
+}
+function getWordCloudOptionInputNames() {
+    var a = [
+        "inp_woc_wcloud_all_names",
+        "inp_woc_wcloud_day_names",
+        "inp_woc_wcloud_all_msgs",
+        "inp_woc_wcloud_day_msgs"
+    ];
+    return a;
+}
+function updateOutputSubOptions(enable, elementIds) {
+    var callable = enable ? element_enabler : element_disabler;
+    
+    elementIds.forEach(callable);
+}
 function getChatTextModeInputElementNames() {
     var a = [
         "inp_dtfmt_ddmmyyyy",
@@ -53,18 +115,31 @@ function getChatTextModeInputElementNames() {
         "inp_tmfmt_hh24mm",
         "inp_dtstr",
         "wa_output_options_button",
-        "inp_woc_graf",
-        "inp_woc_wcloud",
-        "inp_woc_csv"
+    ];
+    var woo = getOutputOptionDefaults();
+    for(var ooid in woo) {
+        a.push(ooid);
+    }
+    return a;
+}
+function getChatTextModeDivIds() {
+    var a = [
+        "wa_chat_text_options",
+        "wa_output_options_button"
     ];
     return a;
 }
-
-function element_disabler(element, index, arr) {
-    document.getElementById(element).disabled = true;
+function getWaOutputOptionsContainerId() {
+    return "wa_output_options";
 }
-function element_enabler(element, index, arr) {
-    document.getElementById(element).disabled = false;
+function getWaOutputOptionsContainerElement() {
+    return document.getElementById(getWaOutputOptionsContainerId());
+}
+function element_disabler(elementId, index, arr) {
+    disableIt(document.getElementById(elementId));
+}
+function element_enabler(elementId, index, arr) {
+    enableIt(document.getElementById(elementId));
 }
 
 function disableIt(x) {
@@ -85,55 +160,58 @@ function showIt(x) {
 
 function set_plain_text_mode() {
 
-    getChatTextModeInputElementNames().forEach(
-        function(element, index, arr) {
-            disableIt(document.getElementById(element));
-        }
-    );
+    getChatTextModeInputElementNames().forEach(element_disabler);
     
-    ["wa_chat_text_options", "wa_output_options_button"].forEach(
+    getChatTextModeDivIds().forEach(
         function(ele, ind, arr) {
             hideIt(document.getElementById(ele));
         }
     );
-    
     hideOutputOptions();
 }
 function set_chat_text_mode() {
 
-    getChatTextModeInputElementNames().forEach(
-        function(element, index, arr) {
-            enableIt(document.getElementById(element));
-        }
-    );
+    getChatTextModeInputElementNames().forEach(element_enabler);
 
-    ["wa_chat_text_options", "wa_output_options_button"].forEach(
+    getChatTextModeDivIds().forEach(
         function(ele, ind, arr) {
             showIt(document.getElementById(ele));
         }
     );
+    restoreOutputOptionDefaults();
 }
-function showOutputOptions() {
-    showIt(document.getElementById("wa_output_options"));
-}
-function hideOutputOptions() {
-    hideIt(document.getElementById("wa_output_options"));
-    
-    [ "inp_woc_graf", "inp_woc_wcloud", "inp_woc_csv"].forEach(
-        function(ele, ind, arr) {
-            document.getElementById(ele).checked = true;
-        }
-    );    
-    
+function restoreOutputOptionDefaults() {
+    var ooDefaults = getOutputOptionDefaults();
+    for(var ooid in ooDefaults) {
+        document.getElementById(ooid).checked =
+            ooDefaults[ooid];
+    }
+    var ooo = getOutputOptions();
+    for(var ooid in ooo) {
+        updateOutputSubOptions(document.getElementById(ooid).checked, ooo[ooid]);
+    }
 }
 function toggleOutputOptions() {
-    var woo = document.getElementById("wa_output_options");
+    var woo = getWaOutputOptionsContainerElement();
     var vis = woo.style.visibility;
     if(vis == 'hidden') {
         showOutputOptions();
     } else {
         hideOutputOptions();
     }
+}
+function showOutputOptions() {
+    var oobutton = document.getElementById("wa_output_options_button");
+    oobutton.innerHTML = "Restore defaults and hide output options";
+    var woo = getWaOutputOptionsContainerElement();
+    showIt(woo);
+}
+function hideOutputOptions() {
+    var oobutton = document.getElementById("wa_output_options_button");
+    oobutton.innerHTML = "Show output options";
+    var woo = getWaOutputOptionsContainerElement();
+    hideIt(woo);
+    restoreOutputOptionDefaults();
 }
 function remove_error_msg_area(error_number) {
     var err_id = "error_msg_area_" + error_number;
@@ -145,41 +223,65 @@ function remove_error_msg_area(error_number) {
 '''
 
 MAIN_PAGE_BODY = '''
-<body>
+<body onload="restoreOutputOptionDefaults()">
 <h1>Upload file</h1>
 <form action="/" method=post enctype=multipart/form-data>
   What's your file type?<br>
-  <input onclick="set_chat_text_mode()" name="filetype" type="radio" value="wa_chat_text" checked="true">Whatsapp exported chat text<br>
-  <input onclick="set_plain_text_mode()" name="filetype" type="radio" value="plain_text">Plain text for word cloud<br><br>
+  <input onclick="set_chat_text_mode()" name="filetype" type="radio" value="wa_chat_text" checked="true">Whatsapp exported chat text</input><br>
+  <input onclick="set_plain_text_mode()" name="filetype" type="radio" value="plain_text">Plain text for word cloud</input><br><br>
   <div id="wa_chat_text_options">
       <div id="date_format_chooser">
           Select date format used in the file:<br>
-          <input id="inp_dtfmt_ddmmyyyy" name="dateformat" type="radio" value="DD/MM/YYYY" checked="true">DD/MM/YYYY<br>
-          <input id="inp_dtfmt_mmddyyyy" name="dateformat" type="radio" value="MM/DD/YYYY">MM/DD/YYYY<br>
+          <input id="inp_dtfmt_ddmmyyyy" name="dateformat" type="radio" value="DD/MM/YYYY" checked="true">DD/MM/YYYY</input><br>
+          <input id="inp_dtfmt_mmddyyyy" name="dateformat" type="radio" value="MM/DD/YYYY">MM/DD/YYYY</input><br>
       </div>
       <br>
       <div id="end_date_input">
           Summarise upto this date(in the above date format):<br>
-          <input id="inp_dtstr" type=text name=datestr value="">
+          <input id="inp_dtstr" type=text name=datestr value=""></input>
       </div>
       <br>
       <div id="time_format_chooser">
           Select time format used in the file:<br>
-          <input id="inp_tmfmt_hh12mmssaa" name="timeformat" type="radio" value="hh:mm:ss aa" checked="true">8:47:15 am<br>
-          <input id="inp_tmfmt_hh24mmss" name="timeformat" type="radio" value="HH:mm:ss">20:47:15<br>
-          <input id="inp_tmfmt_hh24mm" name="timeformat" type="radio" value="HH:mm">20:47<br>
+          <input id="inp_tmfmt_hh12mmssaa" name="timeformat" type="radio" value="hh:mm:ss aa" checked="true">8:47:15 am</input><br>
+          <input id="inp_tmfmt_hh24mmss" name="timeformat" type="radio" value="HH:mm:ss">20:47:15</input><br>
+          <input id="inp_tmfmt_hh24mm" name="timeformat" type="radio" value="HH:mm">20:47</input><br>
       </div>
       <br>
-      <a id="wa_output_options_button" onclick="toggleOutputOptions(); return false;" href="">Toggle output options<br></a>
+      <a id="wa_output_options_button" onclick="toggleOutputOptions(); return false;" href="">Show output options</a><br>
       <div id="wa_output_options" style="visibility: hidden; display: none">
           What do you need in the output?<br>
-          <input id="inp_woc_csv" name="wa_output_config" type="checkbox" value="need_csv" checked="true">CSV<br>
-          <input id="inp_woc_graf" name="wa_output_config" type="checkbox" value="need_graphs" checked="true">Graphs<br>
-          <input id="inp_woc_wcloud" name="wa_output_config" type="checkbox" value="need_word_clouds" checked="true">Word clouds<br>
+          <input id="inp_woc_csv" name="wa_output_config" type="checkbox" value="need_csv" checked="false">CSV</input><br>
+	  <dl>
+            <dt><input id="inp_woc_graf" onclick="updateOutputSubOptions(this.checked, getGraphOptionInputNames())" name="wa_output_config" type="checkbox" value="need_graphs" checked="true">Graphs</input></dt>
+	      <dd>
+                  <input id="inp_woc_graf_grp_msgs_by_date" name="wa_output_config" type="checkbox" value="need_grp_msgs_by_date_graph" checked="true">Group messages by date graphs</input></dt>
+              </dd>
+	      <dd>
+                  <input id="inp_woc_graf_day_msgs_by_name" name="wa_output_config" type="checkbox" value="need_day_msgs_by_name_graph" checked="true">Messages by name graph for the given date</input></dt>
+              </dd>
+	      <dd>
+                  <input id="inp_woc_graf_all_msgs_by_name" name="wa_output_config" type="checkbox" value="need_all_msgs_by_name_graph" checked="false">Messages by name graph for all dates</input></dt>
+              </dd>
+	  <dt><input id="inp_woc_wcloud" onclick="updateOutputSubOptions(this.checked, getWordCloudOptionInputNames())" name="wa_output_config" type="checkbox" value="need_word_clouds" checked="true">Word clouds</input></dt>
+	      <dd>
+	          <input id="inp_woc_wcloud_all_names" name="wa_output_config" type="checkbox" value="need_all_names_cloud" checked="false">Word cloud of names based on entire message history</input>
+	      </dd>
+	      <dd>
+	          <input id="inp_woc_wcloud_day_names" name="wa_output_config" type="checkbox" value="need_day_names_cloud" checked="true">Word cloud of names based on messages on the given date</input>
+	      </dd>
+	      <dd>
+	          <input id="inp_woc_wcloud_all_msgs" name="wa_output_config" type="checkbox" value="need_all_msgs_word_cloud" checked="false">Word cloud of entire message history</input>
+	      </dd>
+	      <dd>
+	          <input id="inp_woc_wcloud_day_msgs" name="wa_output_config" type="checkbox" value="need_day_msgs_word_cloud" checked="true">Word cloud of messages on the given date</input>
+	      </dd>
+
+	  </dl>
       </div>
       <br>
   </div>
-  <input type=file name=upfile><input type=submit value=Upload >
+  <input type=file name=upfile></input><input type=submit value=Upload ></input>
 </form>
 <hr>
 {0}
@@ -199,12 +301,21 @@ FILETYPE_PLAIN_TEXT = "plain_text"
 FILETYPE_WA_CHAT_TEXT = "wa_chat_text"
 
 OUTPUT_NEED_CSV = "need_csv"
+
 OUTPUT_NEED_GRAPHS = "need_graphs"
+OUTPUT_NEED_GRP_MSGS_BY_DATE_GRAPH = "need_grp_msgs_by_date_graph"
+OUTPUT_NEED_ALL_MSGS_BY_NAME_GRAPH = "need_all_msgs_by_name_graph"
+OUTPUT_NEED_DAY_MSGS_BY_NAME_GRAPH = "need_day_msgs_by_name_graph"
+
 OUTPUT_NEED_WORD_CLOUDS = "need_word_clouds"
+OUTPUT_NEED_ALL_MSGS_CLOUD = "need_all_msgs_word_cloud"
+OUTPUT_NEED_DAY_MSGS_CLOUD = "need_day_msgs_word_cloud"
+OUTPUT_NEED_ALL_NAMES_CLOUD = "need_all_names_cloud"
+OUTPUT_NEED_DAY_NAMES_CLOUD = "need_day_names_cloud"
+
 
 def get_main_page(*error_msgs):
     error_divs = ''
-
     for i, err_msg in enumerate(error_msgs):
         if err_msg:
             error_divs += ERROR_MSG_DIV.format(i, err_msg)
@@ -294,7 +405,7 @@ def gen_summary_charts(upfilestream, upfilename, datestr, datefmt_str, timefmt_s
     day_msgs_by_name = summary['TODAY_MSGS_BY_NAME']
     all_time_msgs_by_name = summary['ALL_TIME_MSGS_BY_NAME']
     today_words = summary['TODAY_WORDS']
-    #all_time_words = summary['ALL_TIME_WORDS']
+    all_time_words = summary['ALL_TIME_WORDS']
     
     #print 'Day msgs: ', len(day_msgs_by_name), day_msgs_by_name
     #print 'Names: ', len(names_arr), names_arr
@@ -308,27 +419,89 @@ def gen_summary_charts(upfilestream, upfilename, datestr, datefmt_str, timefmt_s
             zf.writestr('summary_{0}.csv'.format(datestrhyphen), csv_content)
 
         if OUTPUT_NEED_GRAPHS in required_outputs:
-            today_plot = StringIO.StringIO()
-            plottry.bar_plot_names_messages(names_arr, day_msgs_by_name, 'Message count', 'Messages by person on '+datestr, today_plot, 'png')
-            today_plot.seek(0)
-            zf.writestr('day_msgs_per_person_{0}.png'.format(datestrhyphen), today_plot.getvalue())
-            today_plot.close()
+            if OUTPUT_NEED_DAY_MSGS_BY_NAME_GRAPH in required_outputs:
+                today_plot = StringIO.StringIO()
+                plottry.bar_plot_names_messages(
+                    names_arr,
+                    day_msgs_by_name,
+		    'Message count for the day',
+		    'Messages by person on '+datestr,
+		    today_plot,
+		    'png'
+		)
+                today_plot.seek(0)
+                zf.writestr(
+		    'day_msgs_per_person_{0}.png'.format(datestrhyphen),
+		    today_plot.getvalue()
+		)
+                today_plot.close()
+
+            if OUTPUT_NEED_ALL_MSGS_BY_NAME_GRAPH in required_outputs:
+                alltime_plot = StringIO.StringIO()
+                plottry.bar_plot_names_messages(
+                    names_arr,
+                    all_time_msgs_by_name,
+		    'Message count for all time',
+		    'Messages by person till '+datestr,
+		    alltime_plot,
+		    'png'
+		)
+                alltime_plot.seek(0)
+                zf.writestr(
+		    'all_time_msgs_per_person_{0}.png'.format(datestrhyphen),
+		    alltime_plot.getvalue()
+		)
+                alltime_plot.close()
             
-            grp_trend = StringIO.StringIO()
-            plottry.line_plot_dates_messages(dates_arr, msg_totals, 'Message count', 'Messages by date till '+datestr, grp_trend, 'png')
-            grp_trend.seek(0)
-            zf.writestr('group_trend_{0}.png'.format(datestrhyphen), grp_trend.getvalue())
-            grp_trend.close()
+	    if OUTPUT_NEED_ALL_MSGS_BY_DATE in required_outputs:
+                grp_trend = StringIO.StringIO()
+                plottry.line_plot_dates_messages(
+		    dates_arr,
+		    msg_totals,
+		    'Message count',
+		    'Messages by date till '+datestr,
+		    grp_trend,
+		    'png'
+		)
+                grp_trend.seek(0)
+                zf.writestr(
+		    'group_trend_{0}.png'.format(datestrhyphen), 
+		    grp_trend.getvalue()
+		)
+                grp_trend.close()
         
         if OUTPUT_NEED_WORD_CLOUDS in required_outputs:
-            today_names = construct_text(names_arr, day_msgs_by_name)
-            zf.writestr('today_name_cloud_{0}.png'.format(datestrhyphen), get_cloud_image_bytes(today_names))
+            if OUTPUT_NEED_DAY_NAMES_CLOUD in required_outputs:
+                today_names = construct_text(names_arr, day_msgs_by_name)
+                zf.writestr(
+		    'today_name_cloud_{0}.png'.format(datestrhyphen),
+                    get_cloud_image_bytes(today_names)
+		)
             
-            #all_time_names = construct_text(names_arr, all_time_msgs_by_name)
-            #zf.writestr('all_time_name_cloud_{0}.png'.format(datestrhyphen), get_cloud_image_bytes(all_time_names))
+            if OUTPUT_NEED_ALL_NAMES_CLOUD in required_outputs:
+                all_time_names = construct_text(names_arr, all_time_msgs_by_name)
+                zf.writestr(
+		    'all_time_name_cloud_{0}.png'.format(datestrhyphen),
+                    get_cloud_image_bytes(all_time_names)
+		)
 
-            zf.writestr('today_word_cloud_{0}.png'.format(datestrhyphen), get_cloud_image_bytes(today_words, font_file_name='Symbola.ttf'))
-            #zf.writestr('all_time_word_cloud_{0}.png'.format(datestrhyphen), get_cloud_image_bytes(all_time_words, font_file_name='Symbola.ttf'))
+            if OUTPUT_NEED_DAY_MSGS_CLOUD in required_outputs:
+                zf.writestr(
+		    'today_word_cloud_{0}.png'.format(datestrhyphen),
+                    get_cloud_image_bytes(
+		        today_words, 
+			font_file_name='Symbola.ttf'
+		    )
+		)
+
+            if OUTPUT_NEED_ALL_MSGS_CLOUD in required_outputs:
+                zf.writestr(
+		    'all_time_word_cloud_{0}.png'.format(datestrhyphen),
+                    get_cloud_image_bytes(
+		        all_time_words, 
+			font_file_name='Symbola.ttf'
+		    )
+		)
 
     mf.seek(0)
     resp = make_response((mf.getvalue(), None, headers))
