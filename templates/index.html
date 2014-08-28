@@ -1,0 +1,79 @@
+<!doctype html>
+<html>
+<head>
+<script type="text/javascript" src="{{ url_for('static', filename='npswa.js') }}"></script>
+<title>NPS chat summary</title>
+</head>
+<body onload="restoreOutputOptionDefaults()">
+<h1>Upload file</h1>
+<form action="/" method=post enctype=multipart/form-data>
+  What's your file type?<br>
+  <input onclick="set_chat_text_mode()" name="filetype" type="radio" value="wa_chat_text" checked="true">Whatsapp exported chat text</input><br>
+  <input onclick="set_plain_text_mode()" name="filetype" type="radio" value="plain_text">Plain text for word cloud</input><br><br>
+  <div id="wa_chat_text_options">
+      <div id="date_format_chooser">
+          Select date format used in the file:<br>
+          <input id="inp_dtfmt_ddmmyyyy" name="dateformat" type="radio" value="DD/MM/YYYY" checked="true">DD/MM/YYYY</input><br>
+          <input id="inp_dtfmt_mmddyyyy" name="dateformat" type="radio" value="MM/DD/YYYY">MM/DD/YYYY</input><br>
+      </div>
+      <br>
+      <div id="end_date_input">
+          Summarise upto this date(in the above date format):<br>
+          <input id="inp_dtstr" type=text name=datestr value=""></input>
+      </div>
+      <br>
+      <div id="time_format_chooser">
+          Select time format used in the file:<br>
+          <input id="inp_tmfmt_hh12mmssaa" name="timeformat" type="radio" value="hh:mm:ss aa" checked="true">8:47:15 am</input><br>
+          <input id="inp_tmfmt_hh24mmss" name="timeformat" type="radio" value="HH:mm:ss">20:47:15</input><br>
+          <input id="inp_tmfmt_hh24mm" name="timeformat" type="radio" value="HH:mm">20:47</input><br>
+      </div>
+      <br>
+      <a id="wa_output_options_button" onclick="toggleOutputOptions(); return false;" href="">Show output options</a><br>
+      <div id="wa_output_options" style="visibility: hidden; display: none">
+          What do you need in the output?<br>
+          <input id="inp_woc_csv" name="wa_output_config" type="checkbox" value="need_csv" checked="false">CSV</input><br>
+	  <dl>
+            <dt><input id="inp_woc_graf" onclick="updateOutputSubOptions(this.checked, getGraphOptionInputNames())" name="wa_output_config" type="checkbox" value="need_graphs" checked="true">Graphs</input></dt>
+	      <dd>
+                  <input id="inp_woc_graf_grp_msgs_by_date" name="wa_output_config" type="checkbox" value="need_grp_msgs_by_date_graph" checked="true">Group messages by date graphs</input></dt>
+              </dd>
+	      <dd>
+                  <input id="inp_woc_graf_day_msgs_by_name" name="wa_output_config" type="checkbox" value="need_day_msgs_by_name_graph" checked="true">Messages by name graph for the given date</input></dt>
+              </dd>
+	      <dd>
+                  <input id="inp_woc_graf_all_msgs_by_name" name="wa_output_config" type="checkbox" value="need_all_msgs_by_name_graph" checked="false">Messages by name graph for all dates</input></dt>
+              </dd>
+	  <dt><input id="inp_woc_wcloud" onclick="updateOutputSubOptions(this.checked, getWordCloudOptionInputNames())" name="wa_output_config" type="checkbox" value="need_word_clouds" checked="true">Word clouds</input></dt>
+	      <dd>
+	          <input id="inp_woc_wcloud_all_names" name="wa_output_config" type="checkbox" value="need_all_names_cloud" checked="false">Word cloud of names based on entire message history</input>
+	      </dd>
+	      <dd>
+	          <input id="inp_woc_wcloud_day_names" name="wa_output_config" type="checkbox" value="need_day_names_cloud" checked="true">Word cloud of names based on messages on the given date</input>
+	      </dd>
+	      <dd>
+	          <input id="inp_woc_wcloud_all_msgs" name="wa_output_config" type="checkbox" value="need_all_msgs_word_cloud" checked="false">Word cloud of entire message history</input>
+	      </dd>
+	      <dd>
+	          <input id="inp_woc_wcloud_day_msgs" name="wa_output_config" type="checkbox" value="need_day_msgs_word_cloud" checked="true">Word cloud of messages on the given date</input>
+	      </dd>
+
+	  </dl>
+      <br>
+      </div>
+  </div>
+  <input type=file name=upfile></input><input type=submit value=Upload ></input>
+</form>
+<hr>
+
+{% for error_msg in error_msgs %}
+<div id="error_msg_area_{{loop.index0}}" style="color:#FF0000">
+{{error_msg}}&nbsp;
+<a id="rm_error_msg_area_{{loop.index0}}_button"
+   onclick="remove_error_msg_area({{loop.index0}}); return false;" href="">Clear message</a>
+</div>
+<br>
+{% endfor %}
+
+</body>
+</html>
