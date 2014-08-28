@@ -166,4 +166,7 @@ function remove_error_msg_area(error_number) {
     var err_id = "error_msg_area_" + error_number;
     hideIt(document.getElementById(err_id));
 }
-
+function setInnerHTML(elementID, txt) {
+    var ele = document.getElementById(elementID)
+    ele.innerHTML = txt;
+}

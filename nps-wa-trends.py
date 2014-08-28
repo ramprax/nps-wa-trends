@@ -79,7 +79,7 @@ def process_req(upfile, filetype, datestr, datefmt_str, timefmt_str, required_ou
         try:
             dtdt = datetime.datetime.strptime(datestr, DATEFMT_MAP[datefmt_str])
         except:
-            ex_info = 'Date entered is invalid or not in correct format'
+            ex_info = 'Date entered is invalid or in wrong format'
         if ex_info:
             isError = True
             error_msgs.append(ex_info)
