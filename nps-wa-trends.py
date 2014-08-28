@@ -290,7 +290,7 @@ MAIN_PAGE_BODY = '''
 '''
 
 ERROR_MSG_DIV = '''
-<div id="error_msg_area_{0}">
+<div id="error_msg_area_{0}" style="color:#FF0000">
 {1}&nbsp;
 <a id="rm_error_msg_area_{0}_button"
    onclick="remove_error_msg_area({0}); return false;" href="">Clear message</a>
@@ -364,7 +364,7 @@ def process_req(upfile, filetype, datestr, datefmt_str, timefmt_str, required_ou
         try:
             dtdt = datetime.datetime.strptime(datestr, DATEFMT_MAP[datefmt_str])
         except:
-            ex_info = 'Date entered is invalid or not in correct fromat'
+            ex_info = 'Date entered is invalid or not in correct format'
         if ex_info:
             isError = True
             error_msgs.append(ex_info)
@@ -392,8 +392,8 @@ def generate_summary_resp(upfilestream, upfilename):
 
 def gen_summary_charts(upfilestream, upfilename, datestr, datefmt_str, timefmt_str, required_outputs):
     datestrhyphen = datestr.replace('/', '-')
-    filesuffix = '_'.join(( (x[len('need_'):] if 'need_' in x else x) for x in required_outputs ))
-    headers = {"Content-Disposition": "attachment; filename=%s" % ('summary_{0}_{1}.zip'.format(filesuffix, datestrhyphen))}
+    #filesuffix = '_'.join(( (x[len('need_'):] if 'need_' in x else x) for x in required_outputs ))
+    headers = {"Content-Disposition": "attachment; filename=%s" % ('summary_{0}.zip'.format(datestrhyphen))}
     full_text = upfilestream.read() #.lower()
     
     
@@ -453,7 +453,7 @@ def gen_summary_charts(upfilestream, upfilename, datestr, datefmt_str, timefmt_s
 		)
                 alltime_plot.close()
             
-	    if OUTPUT_NEED_ALL_MSGS_BY_DATE in required_outputs:
+	    if OUTPUT_NEED_GRP_MSGS_BY_DATE_GRAPH in required_outputs:
                 grp_trend = StringIO.StringIO()
                 plottry.line_plot_dates_messages(
 		    dates_arr,
