@@ -65,7 +65,7 @@ def split_time_name(openfilestream, datefmt_str, timefmt_str):
                         name = ' '.join(name.split()) # Get rid of double spaces in names
                         msg = ''+rest[name_end+1:].strip() # Everything after name is msg
             if '<media omitted>' == msg:
-                msg = 'pic'
+                msg = ' '
             yield datestr, datetime_str, (name.lower() if name else name), msg.lower()
 
 def count_by_date_name(iterable, end_date):
@@ -103,17 +103,49 @@ def count_by_date_name(iterable, end_date):
             else:
                 name_count[name] = 1
         else:
-            name_count = {}
+            name_count = OrderedDict()
             date_name_count[datestr] = name_count
             name_count[name] = 1
+
+    return {
+        'NAMES': sorted(name_list),
+        'DATE_NAME_COUNT': date_name_count,
+        'TODAY_WORDS':today_text,
+        'ALL_TIME_WORDS':all_time_text
+    }
     
-    name_list.sort()
-    yield ','.join(('Date', ','.join(name_list)))
+def get_summary_data(instream, today_datestr, datefmt_str, timefmt_str):
+    summary_data = {}
+    #print '#### datestr = ', datestr
+    totalsLineReached = False
+    lastDateReached = False
+    csv_content_arr = []
+    datestr_arr = []
+    date_msg_totals = []
+    today_msgs_by_name = []
+    all_time_msgs_by_name = []
     
-    #print 'Date keys: ', date_name_count.keys()
-    
+    summary = count_by_date_name(
+        split_time_name(
+            instream,
+            datefmt_str,
+            timefmt_str
+        ),
+        today_datestr
+    )
+
+    name_list = summary['NAMES']
+    date_name_count = summary['DATE_NAME_COUNT']
+
+    # CSV Header
+    csv_content_arr.append(','.join(('Date', ','.join(name_list))))
+
     tot_count_by_name = [0] * len(name_list)
     for datestr in date_name_count:
+        
+        # Add date to date array
+        datestr_arr.append(datestr)
+        
         name_count = date_name_count[datestr]
         rowarr = []
         rowarr.append(datestr)
@@ -122,87 +154,78 @@ def count_by_date_name(iterable, end_date):
                 rowarr.append(str(name_count[name]))
                 tot_count_by_name[i] = tot_count_by_name[i] + name_count[name]
             else:
+                name_count[name] = 0
                 rowarr.append('0')
-        yield ','.join(rowarr)
-    yield ','.join(('Totals', ','.join( (str(x) for x in tot_count_by_name) )))
-    
-    yield (today_text, all_time_text)
-    
-    #print '##### Finished'
 
-def get_summary_data(instream, datestr, datefmt_str, timefmt_str):
-    summary_data = {}
-    #print '#### datestr = ', datestr
-    totalsLineReached = False
-    lastDateReached = False
-    csv_content_arr = []
-    datestr_arr = []
-    date_msg_totals = []
-    today_msgs_by_name = ''
-    all_time_msgs_by_name = ''
+        # CSV entry for current date
+        csv_content_arr.append(','.join(rowarr))
+        if datestr == today_datestr:
+            today_msgs_by_name = [ name_count[x] for x in name_list ]
+        date_msg_totals.append(sum( (name_count[x] for x in name_count) ))
+
+    # Total by name
+    csv_content_arr.append(','.join(('Totals', ','.join( (str(x) for x in tot_count_by_name) ))))
     
-    stat_iter = count_by_date_name(
-        split_time_name(
-            instream,
-            datefmt_str,
-            timefmt_str
-        ),
-        datestr
-    )
-    
-    for line in stat_iter:
-        #print '#### line = ', line
-        if not line:
-            continue
-        if line.startswith('Date'):
-            names_line = line
-            csv_content_arr.append(line)
-            continue
-        if line.startswith('Totals'):
-            totalsLineReached = True
-
-        if line.startswith(datestr):
-            today_msgs_by_name = line
-            lastDateReached = True
-        elif lastDateReached and not totalsLineReached:
-            continue
-
-        csv_content_arr.append(line)
-        if totalsLineReached:
-            all_time_msgs_by_name = line
-            break
-
-        line_cols = line.split(',')
-        # Extract & append date
-        datestr_arr.append(line_cols[0]) # append date
-        # Get sum for each date
-        date_msg_totals.append(sum([ int(x) for x in line_cols[1:] ]))
-        
     csv_content = '\n'.join(csv_content_arr)
     #print type(csv_content), len(csv_content)
     #print datestr_arr
     #print date_msg_totals
-    today_msgs_by_name = [ (int(x) if x else 0) for x in today_msgs_by_name.split(',')[1:] ]
-    all_time_msgs_by_name = [ (int(x) if x else 0) for x in all_time_msgs_by_name.split(',')[1:] ]
-    names_line = names_line.split(',')[1:]
+    #all_time_msgs_by_name = tot_count_by_name #[ (int(x) if x else 0) for x in all_time_msgs_by_name.split(',')[1:] ]
     
     summary_data['CSV'] = csv_content
     summary_data['DATES'] = datestr_arr
     summary_data['TOTAL_MSGS_BY_DATE'] = date_msg_totals
-    summary_data['NAMES'] = names_line
+    summary_data['NAMES'] = name_list
     summary_data['TODAY_MSGS_BY_NAME'] = today_msgs_by_name
-    summary_data['ALL_TIME_MSGS_BY_NAME'] = all_time_msgs_by_name
+    summary_data['ALL_TIME_MSGS_BY_NAME'] = tot_count_by_name
     
-    today_words, all_time_words = next(stat_iter)
     #print 'today len', len(today_words)
     #print 'alltime len', len(all_time_words)
-    summary_data['TODAY_WORDS'] = today_words
-    summary_data['ALL_TIME_WORDS'] = all_time_words
+    summary_data['TODAY_WORDS'] = summary['TODAY_WORDS']
+    summary_data['ALL_TIME_WORDS'] = summary['ALL_TIME_WORDS']
     
     return summary_data
 
+def test_summary():
+    input_data = '''
+01/01/2000 8:47:15 pm: Abc Def: Hi
+01/01/2000 8:48:15 pm: Abc Def: Hi
+01/01/2000 8:49:15 pm: Ghi Jkl: Hi Abc
+02/01/2000 8:47:15 pm: Abc Def: Hi Def
+02/01/2000 8:49:15 pm: Ghi Jkl: Hi Abc
+03/01/2000 8:47:15 pm: Abc Def: Hi
+'''
+    datefmt = 'DD/MM/YYYY'
+    timefmt = 'hh:mm:ss aa'
+    today_date = '03/01/2000'
 
-if __name__ == '__main__':
+    expected_csv = '''Date,abc def,ghi jkl
+01/01/2000,2,1
+02/01/2000,1,1
+03/01/2000,1,0
+Totals,4,2'''
+    expected_dates = ['01/01/2000','02/01/2000','03/01/2000']
+    expected_tot_msg_by_dt =[3, 2, 1]
+    expected_names = ['abc def', 'ghi jkl']
+    expected_today_msg_by_name = [1,0]
+    expected_all_msg_by_name = [4,2]
+    expected_today_words = 'hi'
+    expected_all_words = 'Hi Hi Hi Abc Hi Def Hi Abc Hi'.lower()
+    
+    summary_data = get_summary_data(input_data, today_date, datefmt, timefmt)
+    #print "Checking: ", summary_data['CSV'].strip(), "==", expected_csv
+    assert summary_data['CSV'].strip() == expected_csv
+    assert summary_data['DATES'] == expected_dates
+    assert summary_data['TOTAL_MSGS_BY_DATE'] == expected_tot_msg_by_dt
+    #print "Checking: ", summary_data['NAMES'], '==', expected_names
+    assert summary_data['NAMES'] == expected_names
+    assert summary_data['TODAY_MSGS_BY_NAME'] == expected_today_msg_by_name
+    assert summary_data['ALL_TIME_MSGS_BY_NAME'] == expected_all_msg_by_name
+    #print "Checking: ", summary_data['TODAY_WORDS'], '==', expected_today_words
+    assert summary_data['TODAY_WORDS'].strip() == expected_today_words
+    assert summary_data['ALL_TIME_WORDS'].strip() == expected_all_words
+    
+def test_file_cmdline_args():
     #for l in split_time_name('nps-wa-29-jul-2014_0928.txt'):
     #    print l
     import sys
@@ -215,4 +238,7 @@ if __name__ == '__main__':
     with open(filename) as fd:
         summary = get_summary_data(fd.read(), enddatestr)
         print 'summary: ', summary
+
+if __name__ == '__main__':
+    test_summary()
 

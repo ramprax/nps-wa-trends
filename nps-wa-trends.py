@@ -5,7 +5,7 @@ import zipfile
 import StringIO
 from flask import Flask, request, make_response, render_template
 from npswa import get_summary_data, DATEFMT_MAP
-from wc_gen import make_word_cloud_image
+from wc_gen import *
 import plottry
 
 ALLOWED_EXTENSIONS = set(['txt', 'text'])
@@ -114,10 +114,10 @@ def gen_summary_charts(upfilestream, upfilename, datestr, datefmt_str, timefmt_s
     today_words = summary['TODAY_WORDS']
     all_time_words = summary['ALL_TIME_WORDS']
     
-    #print 'Day msgs: ', len(day_msgs_by_name), day_msgs_by_name
-    #print 'Names: ', len(names_arr), names_arr
+    print 'Day msgs: ', len(day_msgs_by_name), day_msgs_by_name
+    print 'Names: ', len(names_arr), names_arr
     if not day_msgs_by_name or len(day_msgs_by_name) != len(names_arr):
-        return render_template('index.html', error_msg=['Input file does not contain any entries for '+datestr+' or input file incomplete/corrupted. Please check and re-upload.'])
+        return render_template('index.html', error_msgs=['Input file does not contain any entries for '+datestr+' or input file incomplete/corrupted. Please check and re-upload.'])
     
     mf = StringIO.StringIO()
     with zipfile.ZipFile(mf, mode='w', compression=zipfile.ZIP_DEFLATED) as zf:
@@ -179,23 +179,23 @@ def gen_summary_charts(upfilestream, upfilename, datestr, datefmt_str, timefmt_s
         
         if OUTPUT_NEED_WORD_CLOUDS in required_outputs:
             if OUTPUT_NEED_DAY_NAMES_CLOUD in required_outputs:
-                today_names = construct_text(names_arr, day_msgs_by_name)
+                #today_names = construct_text(names_arr, day_msgs_by_name)
                 zf.writestr(
 		    'today_name_cloud_{0}.png'.format(datestrhyphen),
-                    get_cloud_image_bytes(today_names)
+                    get_cloud_image_from_word_freqs(names_arr, day_msgs_by_name)
 		)
             
             if OUTPUT_NEED_ALL_NAMES_CLOUD in required_outputs:
-                all_time_names = construct_text(names_arr, all_time_msgs_by_name)
+                #all_time_names = construct_text(names_arr, all_time_msgs_by_name)
                 zf.writestr(
 		    'all_time_name_cloud_{0}.png'.format(datestrhyphen),
-                    get_cloud_image_bytes(all_time_names)
+                    get_cloud_image_from_word_freqs(names_arr, all_time_msgs_by_name)
 		)
 
             if OUTPUT_NEED_DAY_MSGS_CLOUD in required_outputs:
                 zf.writestr(
 		    'today_word_cloud_{0}.png'.format(datestrhyphen),
-                    get_cloud_image_bytes(
+                    get_cloud_image_from_text(
 		        today_words, 
 			font_file_name='Symbola.ttf'
 		    )
@@ -204,7 +204,7 @@ def gen_summary_charts(upfilestream, upfilename, datestr, datefmt_str, timefmt_s
             if OUTPUT_NEED_ALL_MSGS_CLOUD in required_outputs:
                 zf.writestr(
 		    'all_time_word_cloud_{0}.png'.format(datestrhyphen),
-                    get_cloud_image_bytes(
+                    get_cloud_image_from_text(
 		        all_time_words, 
 			font_file_name='Symbola.ttf'
 		    )
@@ -223,13 +223,23 @@ def gen_word_cloud_resp(upfilestream, upfilename):
     resp = make_response((resp_bytes, None, headers))
     return resp
 
-def get_cloud_image_bytes(text, font_file_name='Ubuntu-R.ttf'):
+def get_cloud_image_from_text(text, font_file_name='Ubuntu-R.ttf'):
     cloud_image = StringIO.StringIO()
-    make_word_cloud_image(text, cloud_image, font_file_name=font_file_name)
+    make_word_cloud_image_from_text(text, cloud_image, font_file_name=font_file_name)
     cloud_image.seek(0)
     cloud_image_bytes = cloud_image.getvalue()
     cloud_image.close()
     return cloud_image_bytes
+    
+def get_cloud_image_from_word_freqs(words, freqs, font_file_name='Ubuntu-R.ttf'):
+    wf_list = normalize_and_sort_word_freq_list([(words[i], freqs[i]) for i in xrange(len(words))])
+    cloud_image = StringIO.StringIO()
+    make_word_cloud_image_from_word_freqs(wf_list, cloud_image, font_file_name=font_file_name)
+    cloud_image.seek(0)
+    cloud_image_bytes = cloud_image.getvalue()
+    cloud_image.close()
+    return cloud_image_bytes
+    
     
 
 def construct_text(word_arr, freq_arr):
