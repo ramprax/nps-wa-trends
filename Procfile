@@ -1,1 +1,1 @@
-web: gunicorn nps-wa-trends:app --log-file=- -t 240
+web: gunicorn nps_wa_trends:app --log-file=- -t 240
