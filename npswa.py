@@ -41,6 +41,7 @@ def split_time_name(openfilestream, datefmt_str, timefmt_str):
             datetime_str = None
             name = None
             msg = ''+line.strip() # Assume whole line is a message
+            dtdt = None
             valid_datetime = True
             if len(line) >= len(datetime_fmt):
                 #print line
@@ -66,7 +67,7 @@ def split_time_name(openfilestream, datefmt_str, timefmt_str):
                         msg = ''+rest[name_end+1:].strip() # Everything after name is msg
             if '<media omitted>' == msg:
                 msg = ' '
-            yield datestr, datetime_str, (name.lower() if name else name), msg.lower()
+            yield datestr, datetime_str, dtdt, (name.lower() if name else name), msg.lower()
 
 def count_by_date_name(iterable, end_date):
     date_name_count = OrderedDict()
@@ -75,7 +76,9 @@ def count_by_date_name(iterable, end_date):
     today_text = ''
     all_time_text = ''
     
-    for datestr, datetime_str, name, msg in iterable:
+    msg_count_by_minute_of_day = [0] * (24 * 60)
+    
+    for datestr, datetime_str, msg_datetime, name, msg in iterable:
         if not datestr:
             all_time_text = ' '.join((all_time_text, msg))
             if end_date_reached:
@@ -106,12 +109,18 @@ def count_by_date_name(iterable, end_date):
             name_count = OrderedDict()
             date_name_count[datestr] = name_count
             name_count[name] = 1
+        
+        msg_minute_of_day = msg_datetime.hour * 60 + msg_datetime.minute
+        msg_count_by_minute_of_day[msg_minute_of_day] = (
+            msg_count_by_minute_of_day[msg_minute_of_day] + 1
+        )
 
     return {
         'NAMES': sorted(name_list),
         'DATE_NAME_COUNT': date_name_count,
         'TODAY_WORDS':today_text,
-        'ALL_TIME_WORDS':all_time_text
+        'ALL_TIME_WORDS':all_time_text,
+        'MSGS_BY_MINUTE_OF_DAY':msg_count_by_minute_of_day
     }
     
 def get_summary_data(instream, today_datestr, datefmt_str, timefmt_str):
@@ -183,6 +192,8 @@ def get_summary_data(instream, today_datestr, datefmt_str, timefmt_str):
     #print 'alltime len', len(all_time_words)
     summary_data['TODAY_WORDS'] = summary['TODAY_WORDS']
     summary_data['ALL_TIME_WORDS'] = summary['ALL_TIME_WORDS']
+
+    summary_data['MSGS_BY_MINUTE_OF_DAY'] = summary['MSGS_BY_MINUTE_OF_DAY']
     
     return summary_data
 
@@ -212,6 +223,11 @@ Totals,4,2'''
     expected_today_words = 'hi'
     expected_all_words = 'Hi Hi Hi Abc Hi Def Hi Abc Hi'.lower()
     
+    expected_msg_by_minute = [0] * (24 * 60)
+    expected_msg_by_minute[20*60+47] = 3 # 8:47 pm
+    expected_msg_by_minute[20*60+48] = 1 # 8:48 pm
+    expected_msg_by_minute[20*60+49] = 2 # 8:49 pm
+    
     summary_data = get_summary_data(input_data, today_date, datefmt, timefmt)
     #print "Checking: ", summary_data['CSV'].strip(), "==", expected_csv
     assert summary_data['CSV'].strip() == expected_csv
@@ -224,7 +240,10 @@ Totals,4,2'''
     #print "Checking: ", summary_data['TODAY_WORDS'], '==', expected_today_words
     assert summary_data['TODAY_WORDS'].strip() == expected_today_words
     assert summary_data['ALL_TIME_WORDS'].strip() == expected_all_words
-    
+
+    #print "Checking: ", summary_data['MSGS_BY_MINUTE_OF_DAY'], '==', expected_msg_by_minute
+    assert summary_data['MSGS_BY_MINUTE_OF_DAY'] == expected_msg_by_minute
+
 def test_file_cmdline_args():
     #for l in split_time_name('nps-wa-29-jul-2014_0928.txt'):
     #    print l
