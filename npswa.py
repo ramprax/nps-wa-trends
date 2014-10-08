@@ -77,6 +77,7 @@ def count_by_date_name(iterable, end_date):
     all_time_text = ''
     
     msg_count_by_minute_of_day = [0] * (24 * 60)
+    msg_count_by_hour_of_day = [0] * 24
     
     for datestr, datetime_str, msg_datetime, name, msg in iterable:
         if not datestr:
@@ -114,13 +115,17 @@ def count_by_date_name(iterable, end_date):
         msg_count_by_minute_of_day[msg_minute_of_day] = (
             msg_count_by_minute_of_day[msg_minute_of_day] + 1
         )
+        msg_count_by_hour_of_day[msg_datetime.hour] = (
+            msg_count_by_hour_of_day[msg_datetime.hour] + 1
+        )
 
     return {
         'NAMES': sorted(name_list),
         'DATE_NAME_COUNT': date_name_count,
         'TODAY_WORDS':today_text,
         'ALL_TIME_WORDS':all_time_text,
-        'MSGS_BY_MINUTE_OF_DAY':msg_count_by_minute_of_day
+        'MSGS_BY_MINUTE_OF_DAY':msg_count_by_minute_of_day,
+        'MSGS_BY_HOUR_OF_DAY':msg_count_by_hour_of_day
     }
     
 def get_summary_data(instream, today_datestr, datefmt_str, timefmt_str):
@@ -194,6 +199,7 @@ def get_summary_data(instream, today_datestr, datefmt_str, timefmt_str):
     summary_data['ALL_TIME_WORDS'] = summary['ALL_TIME_WORDS']
 
     summary_data['MSGS_BY_MINUTE_OF_DAY'] = summary['MSGS_BY_MINUTE_OF_DAY']
+    summary_data['MSGS_BY_HOUR_OF_DAY'] = summary['MSGS_BY_HOUR_OF_DAY']
     
     return summary_data
 

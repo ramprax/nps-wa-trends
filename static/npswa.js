@@ -2,7 +2,7 @@ function getOutputOptionDefaults() {
     var ooDefaults = new Object();
 
     ooDefaults["inp_woc_graf"] = true;
-    ooDefaults["inp_woc_graf_grp_msgs_by_date"] = true;
+    ooDefaults["inp_woc_graf_grp_msgs_by_date"] = false;
     ooDefaults["inp_woc_graf_day_msgs_by_name"] = true;
     ooDefaults["inp_woc_graf_all_msgs_by_name"] = false;
     ooDefaults["inp_woc_graf_all_msgs_by_time_of_day"] = true;

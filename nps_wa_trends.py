@@ -29,7 +29,7 @@ OUTPUT_NEED_GRAPHS = "need_graphs"
 OUTPUT_NEED_GRP_MSGS_BY_DATE_GRAPH = "need_grp_msgs_by_date_graph"
 OUTPUT_NEED_ALL_MSGS_BY_NAME_GRAPH = "need_all_msgs_by_name_graph"
 OUTPUT_NEED_DAY_MSGS_BY_NAME_GRAPH = "need_day_msgs_by_name_graph"
-OUTPUT_NEED_ALL_MSGS_BY_MINUTE_OF_DAY_GRAPH = "need_all_msgs_by_minute_of_day_graph"
+OUTPUT_NEED_ALL_MSGS_BY_TIME_OF_DAY_GRAPH = "need_all_msgs_by_time_of_day_graph"
 
 OUTPUT_NEED_WORD_CLOUDS = "need_word_clouds"
 OUTPUT_NEED_ALL_MSGS_CLOUD = "need_all_msgs_word_cloud"
@@ -125,10 +125,10 @@ PLOT_CFG = {
         'png',
         'group_trend_{0}.png' 
     ),
-    OUTPUT_NEED_ALL_MSGS_BY_MINUTE_OF_DAY_GRAPH : (
+    OUTPUT_NEED_ALL_MSGS_BY_TIME_OF_DAY_GRAPH : (
         plottry.fill_plot_ticks_messages,
         'TIME_TICKS',
-        'MSGS_BY_MINUTE_OF_DAY',
+        'MSGS_BY_HOUR_OF_DAY',
         'Message count',
         'Messages by time of day till ',
         'png',
