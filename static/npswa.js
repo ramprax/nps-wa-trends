@@ -5,7 +5,8 @@ function getOutputOptionDefaults() {
     ooDefaults["inp_woc_graf_grp_msgs_by_date"] = true;
     ooDefaults["inp_woc_graf_day_msgs_by_name"] = true;
     ooDefaults["inp_woc_graf_all_msgs_by_name"] = false;
-
+    ooDefaults["inp_woc_graf_all_msgs_by_time_of_day"] = true;
+    
     ooDefaults["inp_woc_wcloud"] = true;
     ooDefaults["inp_woc_wcloud_all_names"] = false;
     ooDefaults["inp_woc_wcloud_day_names"] = true;
@@ -22,7 +23,8 @@ function getOutputOptions() {
     ooo["inp_woc_graf"] = [
         "inp_woc_graf_grp_msgs_by_date",
         "inp_woc_graf_day_msgs_by_date",
-        "inp_woc_graf_all_msgs_by_date"
+        "inp_woc_graf_all_msgs_by_date",
+        "inp_woc_graf_all_msgs_by_time_of_day"
     ];
     ooo["inp_woc_wcloud"] = [
         "inp_woc_wcloud_all_names",
@@ -37,7 +39,8 @@ function getGraphOptionInputNames() {
     var a = [
         "inp_woc_graf_grp_msgs_by_date",
         "inp_woc_graf_day_msgs_by_name",
-        "inp_woc_graf_all_msgs_by_name"
+        "inp_woc_graf_all_msgs_by_name",
+        "inp_woc_graf_all_msgs_by_time_of_day"
     ];
     return a;
 }

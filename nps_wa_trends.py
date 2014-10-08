@@ -29,6 +29,7 @@ OUTPUT_NEED_GRAPHS = "need_graphs"
 OUTPUT_NEED_GRP_MSGS_BY_DATE_GRAPH = "need_grp_msgs_by_date_graph"
 OUTPUT_NEED_ALL_MSGS_BY_NAME_GRAPH = "need_all_msgs_by_name_graph"
 OUTPUT_NEED_DAY_MSGS_BY_NAME_GRAPH = "need_day_msgs_by_name_graph"
+OUTPUT_NEED_ALL_MSGS_BY_MINUTE_OF_DAY_GRAPH = "need_all_msgs_by_minute_of_day_graph"
 
 OUTPUT_NEED_WORD_CLOUDS = "need_word_clouds"
 OUTPUT_NEED_ALL_MSGS_CLOUD = "need_all_msgs_word_cloud"
@@ -96,6 +97,66 @@ def process_req(upfile, filetype, datestr, datefmt_str, timefmt_str, required_ou
 
     return render_template('index.html', error_msgs=['Ooops! You uncovered a bug. Contact the developer.']) #get_main_page('Ooops! You uncovered a bug. Contact the developer.')
 
+PLOT_CFG = {
+    OUTPUT_NEED_DAY_MSGS_BY_NAME_GRAPH : (
+        plottry.bar_plot_names_messages,
+        'NAMES',
+        'TODAY_MSGS_BY_NAME',
+        'Message count for the day',
+        'Messages by person on ',
+        'png',
+        'day_msgs_per_person_{0}.png'
+    ),
+    OUTPUT_NEED_ALL_MSGS_BY_NAME_GRAPH : (
+        plottry.bar_plot_names_messages,
+        'NAMES',
+        'ALL_TIME_MSGS_BY_NAME',
+        'Message count for all time',
+        'Messages by person till ',
+        'png',
+        'all_time_msgs_per_person_{0}.png'
+    ),
+    OUTPUT_NEED_GRP_MSGS_BY_DATE_GRAPH : (
+        plottry.line_plot_dates_messages,
+        'DATES',
+        'TOTAL_MSGS_BY_DATE',
+        'Message count',
+        'Messages by date till ',
+        'png',
+        'group_trend_{0}.png' 
+    ),
+    OUTPUT_NEED_ALL_MSGS_BY_MINUTE_OF_DAY_GRAPH : (
+        plottry.fill_plot_ticks_messages,
+        'TIME_TICKS',
+        'MSGS_BY_MINUTE_OF_DAY',
+        'Message count',
+        'Messages by time of day till ',
+        'png',
+        'time_of_day_trend_till_{0}.png' 
+    )
+
+    
+}
+
+def do_plot(outfile, plot_cfg_key, summary, graph_title_suffix, filename_suffix):
+    plot_func, xarr_key, yarr_key, graf_y_label, graf_title, image_type, filename_fmt = PLOT_CFG.get(plot_cfg_key)
+    xarr = summary[xarr_key]
+    yarr = summary[yarr_key]
+    myplot = StringIO.StringIO()
+    plot_func(
+        xarr,
+        yarr,
+        graf_y_label,
+        graf_title + graph_title_suffix,
+        myplot,
+        image_type
+    )
+    myplot.seek(0)
+    outfile.writestr(
+        filename_fmt.format(filename_suffix),
+        myplot.getvalue()
+    )
+    myplot.close()
 
 def gen_summary_charts(upfilestream, upfilename, datestr, datefmt_str, timefmt_str, required_outputs):
     datestrhyphen = datestr.replace('/', '-')
@@ -106,8 +167,6 @@ def gen_summary_charts(upfilestream, upfilename, datestr, datefmt_str, timefmt_s
     
     summary = get_summary_data(full_text, datestr, datefmt_str, timefmt_str)
     csv_content = summary['CSV']
-    dates_arr = summary['DATES']
-    msg_totals = summary['TOTAL_MSGS_BY_DATE']
     names_arr = summary['NAMES']
     day_msgs_by_name = summary['TODAY_MSGS_BY_NAME']
     all_time_msgs_by_name = summary['ALL_TIME_MSGS_BY_NAME']
@@ -119,6 +178,7 @@ def gen_summary_charts(upfilestream, upfilename, datestr, datefmt_str, timefmt_s
     if not day_msgs_by_name or len(day_msgs_by_name) != len(names_arr):
         return render_template('index.html', error_msgs=['Input file does not contain any entries for '+datestr+' or input file incomplete/corrupted. Please check and re-upload.'])
     
+    summary['TIME_TICKS'] = ['Midnight', '3 am', '6 am', '9 am', '12 noon', '3 pm', '6 pm', '9 pm']
     mf = StringIO.StringIO()
     with zipfile.ZipFile(mf, mode='w', compression=zipfile.ZIP_DEFLATED) as zf:
 
@@ -126,89 +186,48 @@ def gen_summary_charts(upfilestream, upfilename, datestr, datefmt_str, timefmt_s
             zf.writestr('summary_{0}.csv'.format(datestrhyphen), csv_content)
 
         if OUTPUT_NEED_GRAPHS in required_outputs:
-            if OUTPUT_NEED_DAY_MSGS_BY_NAME_GRAPH in required_outputs:
-                today_plot = StringIO.StringIO()
-                plottry.bar_plot_names_messages(
-                    names_arr,
-                    day_msgs_by_name,
-		    'Message count for the day',
-		    'Messages by person on '+datestr,
-		    today_plot,
-		    'png'
-		)
-                today_plot.seek(0)
-                zf.writestr(
-		    'day_msgs_per_person_{0}.png'.format(datestrhyphen),
-		    today_plot.getvalue()
-		)
-                today_plot.close()
-
-            if OUTPUT_NEED_ALL_MSGS_BY_NAME_GRAPH in required_outputs:
-                alltime_plot = StringIO.StringIO()
-                plottry.bar_plot_names_messages(
-                    names_arr,
-                    all_time_msgs_by_name,
-		    'Message count for all time',
-		    'Messages by person till '+datestr,
-		    alltime_plot,
-		    'png'
-		)
-                alltime_plot.seek(0)
-                zf.writestr(
-		    'all_time_msgs_per_person_{0}.png'.format(datestrhyphen),
-		    alltime_plot.getvalue()
-		)
-                alltime_plot.close()
+            for ro in PLOT_CFG:
+                if ro in required_outputs:
+                    do_plot(
+                        zf,
+                        ro,
+                        summary,
+                        datestr,
+                        datestrhyphen
+                    )
             
-	    if OUTPUT_NEED_GRP_MSGS_BY_DATE_GRAPH in required_outputs:
-                grp_trend = StringIO.StringIO()
-                plottry.line_plot_dates_messages(
-		    dates_arr,
-		    msg_totals,
-		    'Message count',
-		    'Messages by date till '+datestr,
-		    grp_trend,
-		    'png'
-		)
-                grp_trend.seek(0)
-                zf.writestr(
-		    'group_trend_{0}.png'.format(datestrhyphen), 
-		    grp_trend.getvalue()
-		)
-                grp_trend.close()
-        
         if OUTPUT_NEED_WORD_CLOUDS in required_outputs:
             if OUTPUT_NEED_DAY_NAMES_CLOUD in required_outputs:
                 #today_names = construct_text(names_arr, day_msgs_by_name)
                 zf.writestr(
-		    'today_name_cloud_{0}.png'.format(datestrhyphen),
+                    'today_name_cloud_{0}.png'.format(datestrhyphen),
                     get_cloud_image_from_word_freqs(names_arr, day_msgs_by_name)
-		)
+                )
             
             if OUTPUT_NEED_ALL_NAMES_CLOUD in required_outputs:
                 #all_time_names = construct_text(names_arr, all_time_msgs_by_name)
                 zf.writestr(
-		    'all_time_name_cloud_{0}.png'.format(datestrhyphen),
+                    'all_time_name_cloud_{0}.png'.format(datestrhyphen),
                     get_cloud_image_from_word_freqs(names_arr, all_time_msgs_by_name)
-		)
+                )
 
             if OUTPUT_NEED_DAY_MSGS_CLOUD in required_outputs:
                 zf.writestr(
-		    'today_word_cloud_{0}.png'.format(datestrhyphen),
+                    'today_word_cloud_{0}.png'.format(datestrhyphen),
                     get_cloud_image_from_text(
-		        today_words, 
-			font_file_name='Symbola.ttf'
-		    )
-		)
+                        today_words, 
+                        font_file_name='Symbola.ttf'
+                    )
+                )
 
             if OUTPUT_NEED_ALL_MSGS_CLOUD in required_outputs:
                 zf.writestr(
-		    'all_time_word_cloud_{0}.png'.format(datestrhyphen),
+                    'all_time_word_cloud_{0}.png'.format(datestrhyphen),
                     get_cloud_image_from_text(
-		        all_time_words, 
-			font_file_name='Symbola.ttf'
-		    )
-		)
+                        all_time_words, 
+                        font_file_name='Symbola.ttf'
+                    )
+                )
 
     mf.seek(0)
     resp = make_response((mf.getvalue(), None, headers))
