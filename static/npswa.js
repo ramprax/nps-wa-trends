@@ -63,6 +63,7 @@ function getChatTextModeInputElementNames() {
         "inp_dtfmt_ddmmyyyy",
         "inp_dtfmt_mmddyyyy",
         "inp_tmfmt_hh12mmssaa",
+        "inp_tmfmt_hh12mmaa",
         "inp_tmfmt_hh24mmss",
         "inp_tmfmt_hh24mm",
         "inp_dtstr",

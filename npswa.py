@@ -11,6 +11,7 @@ DATEFMT_MAP = {
 
 TIMEFMT_MAP = {
     'hh:mm:ss aa':'%I:%M:%S %p',
+    'hh:mm aa':'%I:%M %p',
     'HH:mm:ss':'%H:%M:%S',
     'HH:mm':'%H:%M'
 }
