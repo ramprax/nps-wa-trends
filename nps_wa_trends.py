@@ -30,6 +30,7 @@ OUTPUT_NEED_GRP_MSGS_BY_DATE_GRAPH = "need_grp_msgs_by_date_graph"
 OUTPUT_NEED_ALL_MSGS_BY_NAME_GRAPH = "need_all_msgs_by_name_graph"
 OUTPUT_NEED_DAY_MSGS_BY_NAME_GRAPH = "need_day_msgs_by_name_graph"
 OUTPUT_NEED_ALL_MSGS_BY_TIME_OF_DAY_GRAPH = "need_all_msgs_by_time_of_day_graph"
+OUTPUT_NEED_ALL_MSGS_BY_DAY_OF_WEEK_GRAPH = "need_all_msgs_by_day_of_week_graph"
 
 OUTPUT_NEED_WORD_CLOUDS = "need_word_clouds"
 OUTPUT_NEED_ALL_MSGS_CLOUD = "need_all_msgs_word_cloud"
@@ -133,6 +134,15 @@ PLOT_CFG = {
         'Messages by time of day till ',
         'png',
         'time_of_day_trend_till_{0}.png' 
+    ),
+    OUTPUT_NEED_ALL_MSGS_BY_DAY_OF_WEEK_GRAPH : (
+        plottry.fill_plot_ticks_messages,
+        'DAYS_OF_WEEK',
+        'MSGS_BY_DAY_OF_WEEK',
+        'Message count',
+        'Messages by weekday till ',
+        'png',
+        'weekday_trend_till_{0}.png' 
     )
 
     
@@ -237,7 +247,7 @@ def gen_summary_charts(upfilestream, upfilename, datestr, datefmt_str, timefmt_s
     
 def gen_word_cloud_resp(upfilestream, upfilename):
     full_text = upfilestream.read().lower()
-    resp_bytes = get_cloud_image_bytes(full_text, font_file_name='Symbola.ttf')
+    resp_bytes = get_cloud_image_from_text(full_text, font_file_name='Symbola.ttf')
     headers = {"Content-Disposition": "attachment; filename=%s" % ('{0}.png'.format(upfilename.replace(' ', '_')))}
     resp = make_response((resp_bytes, None, headers))
     return resp

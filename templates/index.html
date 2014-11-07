@@ -28,8 +28,9 @@
       <div id="date_format_chooser">
           <dl>
           <dt>Select date format used in the file:</dt>
-          <dd><input id="inp_dtfmt_ddmmyyyy" onclick="setInnerHTML('inp_dtstr_lbl', '('+this.value+')');" name="dateformat" type="radio" value="DD/MM/YYYY" checked="true">DD/MM/YYYY</input></dd>
-          <dd><input id="inp_dtfmt_mmddyyyy" onclick="setInnerHTML('inp_dtstr_lbl', '('+this.value+')');" name="dateformat" type="radio" value="MM/DD/YYYY">MM/DD/YYYY</input></dd>
+          <dd><input id="inp_dtfmt_ddmmyyyy_slash" onclick="setInnerHTML('inp_dtstr_lbl', '('+this.value+')');" name="dateformat" type="radio" value="DD/MM/YYYY" checked="true">DD/MM/YYYY e.g., 14/04/1950</input></dd>
+          <dd><input id="inp_dtfmt_mmddyyyy_slash" onclick="setInnerHTML('inp_dtstr_lbl', '('+this.value+')');" name="dateformat" type="radio" value="MM/DD/YYYY">MM/DD/YYYY e.g., 04/14/1950</input></dd>
+          <dd><input id="inp_dtfmt_ddmonyyyy_space" onclick="setInnerHTML('inp_dtstr_lbl', '('+this.value+')');" name="dateformat" type="radio" value="DD Mon YYYY">DD Mon YYYY e.g., 14 Apr 1950</input></dd>
           </dl>
       </div>
       <div id="end_date_input">
@@ -41,10 +42,10 @@
       <div id="time_format_chooser">
           <dl>
           <dt>Select time format used in the file:</dt>
-          <dd><input id="inp_tmfmt_hh12mmssaa" name="timeformat" type="radio" value="hh:mm:ss aa" checked="true">8:47:15 am</input></dd>
-          <dd><input id="inp_tmfmt_hh12mmaa" name="timeformat" type="radio" value="hh:mm aa">8:47 am</input></dd>
-          <dd><input id="inp_tmfmt_hh24mmss" name="timeformat" type="radio" value="HH:mm:ss">20:47:15</input></dd>
-          <dd><input id="inp_tmfmt_hh24mm" name="timeformat" type="radio" value="HH:mm">20:47</input></dd>
+          <dd><input id="inp_tmfmt_hh12mmssaa_colon" name="timeformat" type="radio" value="hh:mm:ss aa" checked="true">8:47:15 am</input></dd>
+          <dd><input id="inp_tmfmt_hh12mmaa_colon" name="timeformat" type="radio" value="hh:mm aa">8:47 am</input></dd>
+          <dd><input id="inp_tmfmt_hh24mmss_colon" name="timeformat" type="radio" value="HH:mm:ss">20:47:15</input></dd>
+          <dd><input id="inp_tmfmt_hh24mm_colon" name="timeformat" type="radio" value="HH:mm">20:47</input></dd>
           </dl>
       </div>
       <div id="oo_container">
@@ -67,6 +68,10 @@
 	      <dd>
                   <input id="inp_woc_graf_all_msgs_by_time_of_day" name="wa_output_config" type="checkbox" value="need_all_msgs_by_time_of_day_graph" checked="true">Messages by time of day graph</input></dt>
               </dd>
+	      <dd>
+                  <input id="inp_woc_graf_all_msgs_by_day_of_week" name="wa_output_config" type="checkbox" value="need_all_msgs_by_day_of_week_graph" checked="true">Messages by weekday graph</input></dt>
+              </dd>
+               
 	  <dt><input id="inp_woc_wcloud" onclick="updateOutputSubOptions(this.checked, getWordCloudOptionInputNames())" name="wa_output_config" type="checkbox" value="need_word_clouds" checked="true">Word clouds</input></dt>
 	      <dd>
 	          <input id="inp_woc_wcloud_all_names" name="wa_output_config" type="checkbox" value="need_all_names_cloud" checked="false">Word cloud of names based on entire message history</input>

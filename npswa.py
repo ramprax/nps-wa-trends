@@ -6,7 +6,8 @@ from collections import OrderedDict
 
 DATEFMT_MAP = {
     'DD/MM/YYYY':'%d/%m/%Y',
-    'MM/DD/YYYY':'%m/%d/%Y'
+    'MM/DD/YYYY':'%m/%d/%Y',
+    'DD Mon YYYY':'%d %b %Y'
 }
 
 TIMEFMT_MAP = {
@@ -79,6 +80,8 @@ def count_by_date_name(iterable, end_date):
     
     msg_count_by_minute_of_day = [0] * (24 * 60)
     msg_count_by_hour_of_day = [0] * 24
+    dow_name_arr = [ None ] * 7
+    msg_count_by_day_of_week = [ 0 ] * 7
     
     for datestr, datetime_str, msg_datetime, name, msg in iterable:
         if not datestr:
@@ -119,18 +122,27 @@ def count_by_date_name(iterable, end_date):
         msg_count_by_hour_of_day[msg_datetime.hour] = (
             msg_count_by_hour_of_day[msg_datetime.hour] + 1
         )
-
+        wd = msg_datetime.weekday()
+        msg_count_by_day_of_week[wd] = (
+            msg_count_by_day_of_week[wd] + 1
+        )
+        if not dow_name_arr[wd]:
+            dow_name_arr[wd] = msg_datetime.strftime('%A')
+    
+    print 'Msg counts: ', msg_count_by_day_of_week
+    print 'DOW: ', dow_name_arr
     return {
         'NAMES': sorted(name_list),
         'DATE_NAME_COUNT': date_name_count,
         'TODAY_WORDS':today_text,
         'ALL_TIME_WORDS':all_time_text,
         'MSGS_BY_MINUTE_OF_DAY':msg_count_by_minute_of_day,
-        'MSGS_BY_HOUR_OF_DAY':msg_count_by_hour_of_day
+        'MSGS_BY_HOUR_OF_DAY':msg_count_by_hour_of_day,
+        'DAYS_OF_WEEK':dow_name_arr,
+        'MSGS_BY_DAY_OF_WEEK':msg_count_by_day_of_week
     }
     
 def get_summary_data(instream, today_datestr, datefmt_str, timefmt_str):
-    summary_data = {}
     #print '#### datestr = ', datestr
     totalsLineReached = False
     lastDateReached = False
@@ -187,22 +199,16 @@ def get_summary_data(instream, today_datestr, datefmt_str, timefmt_str):
     #print date_msg_totals
     #all_time_msgs_by_name = tot_count_by_name #[ (int(x) if x else 0) for x in all_time_msgs_by_name.split(',')[1:] ]
     
-    summary_data['CSV'] = csv_content
-    summary_data['DATES'] = datestr_arr
-    summary_data['TOTAL_MSGS_BY_DATE'] = date_msg_totals
-    summary_data['NAMES'] = name_list
-    summary_data['TODAY_MSGS_BY_NAME'] = today_msgs_by_name
-    summary_data['ALL_TIME_MSGS_BY_NAME'] = tot_count_by_name
+    summary['CSV'] = csv_content
+    summary['DATES'] = datestr_arr
+    summary['TOTAL_MSGS_BY_DATE'] = date_msg_totals
+    summary['TODAY_MSGS_BY_NAME'] = today_msgs_by_name
+    summary['ALL_TIME_MSGS_BY_NAME'] = tot_count_by_name
     
     #print 'today len', len(today_words)
     #print 'alltime len', len(all_time_words)
-    summary_data['TODAY_WORDS'] = summary['TODAY_WORDS']
-    summary_data['ALL_TIME_WORDS'] = summary['ALL_TIME_WORDS']
-
-    summary_data['MSGS_BY_MINUTE_OF_DAY'] = summary['MSGS_BY_MINUTE_OF_DAY']
-    summary_data['MSGS_BY_HOUR_OF_DAY'] = summary['MSGS_BY_HOUR_OF_DAY']
     
-    return summary_data
+    return summary
 
 def test_summary():
     input_data = '''
@@ -235,6 +241,14 @@ Totals,4,2'''
     expected_msg_by_minute[20*60+48] = 1 # 8:48 pm
     expected_msg_by_minute[20*60+49] = 2 # 8:49 pm
     
+    expected_msg_by_hour = [0] * 24
+    expected_msg_by_hour[20] = 6
+    
+    expected_msg_by_weekday = [0] * 7
+    expected_msg_by_weekday[5] = 3
+    expected_msg_by_weekday[6] = 2
+    expected_msg_by_weekday[0] = 1
+    
     summary_data = get_summary_data(input_data, today_date, datefmt, timefmt)
     #print "Checking: ", summary_data['CSV'].strip(), "==", expected_csv
     assert summary_data['CSV'].strip() == expected_csv
@@ -250,6 +264,12 @@ Totals,4,2'''
 
     #print "Checking: ", summary_data['MSGS_BY_MINUTE_OF_DAY'], '==', expected_msg_by_minute
     assert summary_data['MSGS_BY_MINUTE_OF_DAY'] == expected_msg_by_minute
+
+    #print "Checking: ", summary_data['MSGS_BY_HOUR_OF_DAY'], '==', expected_msg_by_hour
+    assert summary_data['MSGS_BY_HOUR_OF_DAY'] == expected_msg_by_hour
+    
+    #print "Checking: ", summary_data['MSGS_BY_DAY_OF_WEEK'], '==', expected_msg_by_weekday
+    assert summary_data['MSGS_BY_DAY_OF_WEEK'] == expected_msg_by_weekday
 
 def test_file_cmdline_args():
     #for l in split_time_name('nps-wa-29-jul-2014_0928.txt'):

@@ -6,6 +6,7 @@ function getOutputOptionDefaults() {
     ooDefaults["inp_woc_graf_day_msgs_by_name"] = true;
     ooDefaults["inp_woc_graf_all_msgs_by_name"] = false;
     ooDefaults["inp_woc_graf_all_msgs_by_time_of_day"] = true;
+    ooDefaults["inp_woc_graf_all_msgs_by_day_of_week"] = true;
     
     ooDefaults["inp_woc_wcloud"] = true;
     ooDefaults["inp_woc_wcloud_all_names"] = false;
@@ -24,7 +25,8 @@ function getOutputOptions() {
         "inp_woc_graf_grp_msgs_by_date",
         "inp_woc_graf_day_msgs_by_date",
         "inp_woc_graf_all_msgs_by_date",
-        "inp_woc_graf_all_msgs_by_time_of_day"
+        "inp_woc_graf_all_msgs_by_time_of_day",
+        "inp_woc_graf_all_msgs_by_day_of_week"
     ];
     ooo["inp_woc_wcloud"] = [
         "inp_woc_wcloud_all_names",
@@ -40,7 +42,8 @@ function getGraphOptionInputNames() {
         "inp_woc_graf_grp_msgs_by_date",
         "inp_woc_graf_day_msgs_by_name",
         "inp_woc_graf_all_msgs_by_name",
-        "inp_woc_graf_all_msgs_by_time_of_day"
+        "inp_woc_graf_all_msgs_by_time_of_day",
+        "inp_woc_graf_all_msgs_by_day_of_week"
     ];
     return a;
 }
@@ -60,12 +63,13 @@ function updateOutputSubOptions(enable, elementIds) {
 }
 function getChatTextModeInputElementNames() {
     var a = [
-        "inp_dtfmt_ddmmyyyy",
-        "inp_dtfmt_mmddyyyy",
-        "inp_tmfmt_hh12mmssaa",
-        "inp_tmfmt_hh12mmaa",
-        "inp_tmfmt_hh24mmss",
-        "inp_tmfmt_hh24mm",
+        "inp_dtfmt_ddmmyyyy_slash",
+        "inp_dtfmt_mmddyyyy_slash",
+        "inp_dtfmt_ddmonyyyy_space",
+        "inp_tmfmt_hh12mmssaa_colon",
+        "inp_tmfmt_hh12mmaa_colon",
+        "inp_tmfmt_hh24mmss_colon",
+        "inp_tmfmt_hh24mm_colon",
         "inp_dtstr",
         "wa_output_options_button",
     ];
